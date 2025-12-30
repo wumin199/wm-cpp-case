@@ -16,8 +16,8 @@ class SensorToBlackboard(py_trees.behaviour.Behaviour):
 
     def update(self):
         self.tick_count += 1
-        # 逻辑：第 2 次 Tick 开始看到人
-        found = True if self.tick_count >= 2 else False
+        # 逻辑：第 3 次 Tick 开始看到人
+        found = True if self.tick_count >= 3 else False
 
         # 写入黑板
         self.blackboard.set("person_visible", found)
