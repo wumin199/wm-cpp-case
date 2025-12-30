@@ -2,6 +2,9 @@
 
 # 参考资料
 
+- [Behavior Trees in Robotics and AI: An Introduction](https://arxiv.org/abs/1709.00084)
+  - [GitHub](https://github.com/BehaviorTree/BehaviorTree.CPP)
+  - [home page](https://btirai.github.io/index)
 - [introduction-to-behavior-trees](https://robohub.org/introduction-to-behavior-trees/)
   - [中文翻译1](https://zhuanlan.zhihu.com/p/463182588)
   - [中文翻译2](https://zhuanlan.zhihu.com/p/670678490)
@@ -10,8 +13,5 @@
 - [PyTree ROS Tutorials](https://robohub.org/introduction-to-behavior-trees/)
 - [Py Trees](https://py-trees.readthedocs.io/en/devel/index.html)
 - [Behavior Trees: Simple yet Powerful AI for your Robot](https://pirobot.org/blog/0030/)
-- [Behavior Trees in Robotics and AI: An Introduction](https://arxiv.org/abs/1709.00084)
-  - [GitHub](https://github.com/BehaviorTree/BehaviorTree.CPP)
-  - [home page](https://btirai.github.io/index)
 - [Towards a Unified Behavior Trees Framework for Robot Control](https://www.csc.kth.se/~almc/pdf/unified_bt_framework.pdf)
 - [](https://py-trees.readthedocs.io/en/devel/index.html)
