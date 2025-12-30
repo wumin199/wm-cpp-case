@@ -1,5 +1,6 @@
 import time
 
+
 class RobotFSM:
     def __init__(self):
         # 定义状态
@@ -9,7 +10,7 @@ class RobotFSM:
         self.STATE_DETECT_3 = "DETECT_3"
         self.STATE_DETECT_4 = "DETECT_4"
         self.STATE_SUCCESS = "SUCCESS"
-        
+
         self.current_state = self.STATE_IDLE_ROTATING
         self.tick_count = 0
 
@@ -26,7 +27,7 @@ class RobotFSM:
 
     def tick(self):
         print(f"\n--- 第 {self.tick_count + 1} 次 Tick ---")
-        
+
         # 1. 执行当前状态的基础动作（旋转在所有非成功状态都要执行）
         if self.current_state != self.STATE_SUCCESS:
             self.execute_rotate()
@@ -38,16 +39,16 @@ class RobotFSM:
         if self.current_state == self.STATE_IDLE_ROTATING:
             if person_visible:
                 self.current_state = self.STATE_DETECT_1
-        
+
         elif self.current_state == self.STATE_DETECT_1:
             self.current_state = self.STATE_DETECT_2 if person_visible else self.STATE_IDLE_ROTATING
-        
+
         elif self.current_state == self.STATE_DETECT_2:
             self.current_state = self.STATE_DETECT_3 if person_visible else self.STATE_IDLE_ROTATING
-        
+
         elif self.current_state == self.STATE_DETECT_3:
             self.current_state = self.STATE_DETECT_4 if person_visible else self.STATE_IDLE_ROTATING
-        
+
         elif self.current_state == self.STATE_DETECT_4:
             if person_visible:
                 self.current_state = self.STATE_SUCCESS
@@ -61,9 +62,10 @@ class RobotFSM:
         while self.current_state != self.STATE_SUCCESS and self.tick_count < 15:
             self.tick()
             time.sleep(0.1)
-        
+
         if self.current_state == self.STATE_SUCCESS:
             print("\n[结果] FSM 达到成功状态，任务完成！")
+
 
 if __name__ == "__main__":
     fsm_robot = RobotFSM()
