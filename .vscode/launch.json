@@ -5,25 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "hello_world",
+            "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/cpp_template/hello_world", // 可执行文件路径
             "args": [
                 // "-config_path=/xxx/abc.yaml"
+                // "--log_path=/xx/log"
             ],
             "stopAtEntry": false,
             // 指定exe执行的目录
-            "cwd": "${workspaceFolder}",
+            "cwd": "${fileDirname}", // "${workspaceFolder}"
+            "externalConsole": false,
+            "MIMode": "gdb",
             "environment": [
                 {
-                    // "PATH": "/opt/wm-vcpkg/installed/x64-linux/bin:${workspaceFolder}/Release/wumin199/bin:${env:PATH}",
-                    // "LD_LIBRARY_PATH": "/opt/wm-vcpkg/installed/x64-linux/lib:${workspaceFolder}/Release/wumin199/lib:${env:LD_LIBRARY_PATH}"
+                    "name": "PATH",
+                    "value": "/opt/wm-vcpkg/installed/x64-linux/bin:${workspaceFolder}/Debug/wumin199/bin:${env:PATH}",
+                },
+                {
+                    "name": "LD_LIBRARY_PATH",
+                    "value": "/opt/wm-vcpkg/installed/x64-linux/lib:${workspaceFolder}/Debug/wumin199/lib:${env:LD_LIBRARY_PATH}"
                 }
             ]
         }
-    ],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "miDebuggerPath": "/usr/bin/gdb"
+    ]
 }
