@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "hello_world",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/cpp_template/hello_world", // 可执行文件路径
@@ -14,7 +14,7 @@
                 // "--log_path=/xx/log"
             ],
             "stopAtEntry": false,
-            // 指定exe执行的目录
+            // 指定exe执行的目录，为file所在的目录
             "cwd": "${fileDirname}", // "${workspaceFolder}"
             "externalConsole": false,
             "MIMode": "gdb",
