@@ -1,0 +1,37 @@
+{
+    // python linting 配置
+    "flake8.enabled": true,
+    "python.analysis.extraPaths": [
+        // 额外的python包路径，可以根据需要添加
+        // "${workspaceFolder}/Release/xyz/lib/python/dist-packages"
+    ],
+    "[python]": {
+        // 配置black格式化，@TODO: 没用起来
+        // "editor.defaultFormatter": "ms-python.black-formatter",
+        // "editor.formatOnSave": true, // 配合插件 black-formatter 使用
+        // "editor.formatOnPaste": true,
+        "editor.rulers": [
+            100 // 设置右侧参考线位置，和flake8保持一致
+        ],
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true,
+        "editor.wordWrapColumn": 100,
+        "editor.wordWrap": "bounded"
+    },
+    // clang-format 格式化配置
+    "editor.formatOnType": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    // CMake Tools 配置
+    "cmake.generator": "Ninja",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.parallelJobs": 0, // 0，使用默认的cpu核心数
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "/opt/wm-vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "REL_WITH_DEB_INFO": "ON", // 开启调试信息，暂时没用到
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        // "CMAKE_PREFIX_PATH": "${workspaceFolder}/Debug/xyz", // 指定查找包的额外路径，暂时没用到
+        "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/Debug/wumin199",
+        "CMAKE_BUILD_TYPE": "Debug", // 在这里定义编译类型, Release/Debug/RelWithDebInfo/MinSizeRel
+    }
+}

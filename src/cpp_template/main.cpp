@@ -8,8 +8,6 @@
 #include <fmt/core.h>
 
 int main() {
-  fmt::print("Hello World!\n"); // NOLINT
+  fmt::print("Hello World!\n");  // NOLINT
   return 0;
 }
-
-
