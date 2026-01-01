@@ -30,6 +30,7 @@ class SensorToBlackboard(py_trees.behaviour.Behaviour):
         # 这样 Parallel 节点每一轮都会重新进入这个 update
         return py_trees.common.Status.RUNNING
 
+
 # =================================================================
 # 2. 连续计数触发器 (消费者)
 # =================================================================
@@ -57,6 +58,7 @@ class ContinuousSuccessTrigger(py_trees.behaviour.Behaviour):
 
         return py_trees.common.Status.RUNNING
 
+
 # =================================================================
 # 3. 运行逻辑
 # =================================================================
@@ -64,6 +66,9 @@ class ContinuousSuccessTrigger(py_trees.behaviour.Behaviour):
 
 def create_robot_tree():
     sensor = SensorToBlackboard()
+
+    # 它是 py_trees 提供的一个**“哑元”行为节点（Dummy Behaviour）**。 它的源码逻辑极其简单：无论什么时候被
+    # Tick，它都只做一件事——返回 RUNNING 状态。你可以把它理解为行为树里的**“占位符”或“永远忙碌的工人”**
     rotate = py_trees.behaviours.Running(name="Rotate")
     trigger = ContinuousSuccessTrigger(limit=5)
 
@@ -73,7 +78,7 @@ def create_robot_tree():
     # 根节点：监控 confirm_seq
     root = py_trees.composites.Parallel(
         name="Root",
-        policy=py_trees.common.ParallelPolicy.SuccessOnSelected([confirm_seq])
+        policy=py_trees.common.ParallelPolicy.SuccessOnSelected([confirm_seq]),
     )
 
     root.add_children([sensor, rotate, confirm_seq])
