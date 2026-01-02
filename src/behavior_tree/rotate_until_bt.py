@@ -72,6 +72,8 @@ def create_robot_tree():
     rotate = py_trees.behaviours.Running(name="Rotate")
     trigger = ContinuousSuccessTrigger(limit=5)
 
+    # memory=True (有记忆)：如果 Sequence 里的第一个孩子成功了，下一次 Tick 时，它会跳过第一个孩子，直接从上次运行到的地方（第二个孩子）开始。
+    # memory=False (无记忆/反应性)：每一次 Tick，Sequence 都会从第一个孩子开始重新扫描。
     confirm_seq = py_trees.composites.Sequence(name="ConfirmLogic", memory=False)
     confirm_seq.add_child(trigger)
 
