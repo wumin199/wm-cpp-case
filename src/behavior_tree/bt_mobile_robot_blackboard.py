@@ -1,6 +1,8 @@
 import py_trees
 import time
 
+# bt_mobile_robot_blackboard.png
+
 
 # =================================================================
 # 1. 任务管理节点：从队列获取下一个地点 (对应图中的 GetLoc)
