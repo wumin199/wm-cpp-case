@@ -37,6 +37,7 @@ include_directories(
   3rdparty
 )
 
+# 官方已经不维护glog，建议使用spdlog
 find_package(glog REQUIRED)
 if(glog_FOUND)
     set(glog_LIBRARIES glog::glog)
@@ -48,7 +49,8 @@ find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 3.4.1 REQUIRED CONFIG)
 find_package(fmt QUIET)
 find_package(yaml-cpp REQUIRED)
-find_package(GTest REQUIRED) # 官方已经不维护了
+find_package(GTest REQUIRED)
+find_package(spdlog REQUIRED)
 
 
 # clang-tidy需要
@@ -57,4 +59,5 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # enable_cpplint()
 
 add_subdirectory(src/cpp_template)
+add_subdirectory(src/log)
 
