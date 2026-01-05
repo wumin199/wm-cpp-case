@@ -2,16 +2,27 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/daily_file_sink.h"
+
 #include <iostream>
 
 void basic_logging_example();
 void stdout_example();
 void basic_logfile_example();
+void rotating_example();
+void daily_example();
+void backtrace_example();
+void periodic_flushing_example();
 
 int main() {
   //   basic_logging_example();
   //   stdout_example();
-  basic_logfile_example();
+  // basic_logfile_example();
+  // rotating_example();
+  // daily_example();
+  // backtrace_example();
+  periodic_flushing_example();
   return 0;
 }
 
@@ -78,4 +89,92 @@ void basic_logfile_example() {
     return;
   }
   spdlog::get("basic_logger")->info("This is a basic file logger");
+}
+
+void rotating_example() {
+  // Create a file rotating logger with smaller size for easier testing
+  // 使用 1 MB 大小便于测试
+
+  /*
+  当日志文件达到 1 MB 时：
+    当前日志文件会被重命名（如 rotating.txt → rotating.txt.1）
+    新建一个新的 rotating.txt 继续写入
+    超过 3 个文件的旧日志会被删除
+
+    rotating.txt       (当前，<5MB)
+    rotating.txt.1     (上一个)
+    rotating.txt.2     (再上一个)
+    rotating.txt.3     (如果有第4个会被删除)
+  */
+  auto max_size = 1048576 * 1;  // 1 MB
+  auto max_files = 3;           // 最多保留 3 个日志文件
+  auto logger = spdlog::rotating_logger_mt(
+      "some_logger_name", "logs/rotating.txt", max_size, max_files);
+
+  // 写入大量日志以测试滚动效果
+  std::string long_message(1000, 'x');  // 1000 个 'x' 的长消息
+  for (int i = 0; i < 4000; i++) {
+    logger->info("Message {}: {}", i, long_message);
+  }
+  logger->info("Done writing {} messages", 2000);
+}
+
+void daily_example() {
+  // Create a daily logger - a new file is created every day at 2:30 am
+  auto logger =
+      spdlog::daily_logger_mt("daily_logger", "logs/daily.txt", 2, 30);
+  logger->info("This is a daily file logger");
+}
+
+void backtrace_example() {
+  // Debug messages can be stored in a ring buffer instead of being logged
+  // immediately. This is useful to display debug logs only when needed (e.g.
+  // when an error happens). When needed, call dump_backtrace() to dump them to
+  // your log.
+
+  spdlog::enable_backtrace(32);  // Store the latest 32 messages in a buffer.
+  // or my_logger->enable_backtrace(32)..
+  for (int i = 0; i < 100; i++) {
+    spdlog::debug("Backtrace message {}", i);  // not logged yet..
+  }
+  // e.g. if some error happened:
+  spdlog::dump_backtrace();  // log them now! show the last 32 messages
+  // or my_logger->dump_backtrace(32)..
+}
+
+void periodic_flushing_example() {
+  // NOTE(min.wu): 实际使用时，可以
+  // logger->flush_on(spdlog::level::info);
+  // 然后spdlog::flush_every(std::chrono::seconds(5));保险
+  // 这样子 logger->info(), logger->warn(), logger->error()
+  // 会立即刷新，logger->debug() 会被缓冲
+
+  // Enable periodic flushing every 5 seconds
+  auto logger = spdlog::basic_logger_mt("periodic_logger", "logs/periodic.txt");
+
+  // 记录 debug 级别及以上的日志
+  spdlog::set_level(spdlog::level::debug);
+
+  // 只对 error 级别及以上立即刷新（debug 和 info 会被缓冲）
+  logger->flush_on(spdlog::level::err);
+
+  // 定时 5 秒刷新一次
+  spdlog::flush_every(std::chrono::seconds(5));
+
+  for (int i = 0; i < 25; i++) {
+    if (i % 5 == 0) {
+      std::cout << ">>> " << i << "s: Logging message " << i << std::endl;
+    }
+
+    // 只记录 debug 消息（不会触发 flush_on，会被缓冲）
+    logger->debug("This debug message {}: only flushed every 5 seconds", i);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+  }
+
+  // 程序结束前，确保所有数据都被写入
+  logger->flush();
+  std::cout << "\nProgram finished. Check logs/periodic.txt to see 5-second "
+               "flush intervals."
+            << std::endl;
 }
