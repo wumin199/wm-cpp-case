@@ -46,6 +46,7 @@ void syslog_example();
 void load_levels_example();
 void file_events_example();
 void replace_default_logger_example();
+void wheel_log_example();
 
 int main() {
   //   basic_logging_example();
@@ -66,7 +67,8 @@ int main() {
   // syslog_example();
   // load_levels_example();
   // file_events_example();
-  replace_default_logger_example();
+  // replace_default_logger_example();
+  wheel_log_example();
   return 0;
 }
 
@@ -405,4 +407,30 @@ void replace_default_logger_example() {
                                             "logs/new-default-log.txt", true);
   spdlog::set_default_logger(new_logger);
   spdlog::info("new logger log message");
+}
+
+void wheel_log_example() {
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  console_sink->set_level(spdlog::level::debug);
+  // 格式：[时间] [文件名:行号] [线程号] [日志级别] 消息
+  console_sink->set_pattern(
+      "[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%^%l%$] %v");
+
+  auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+      "logs/multisink.txt", true);
+  file_sink->set_level(spdlog::level::debug);
+  // 文件中也记录详细信息
+  file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%l] %v");
+
+  spdlog::logger logger("multi_sink", {console_sink, file_sink});
+  logger.set_level(spdlog::level::debug);
+  // logger.warn("AAA");
+  // logger.info("BBB");
+  // logger.error("CCC");
+
+  // 使用 SPDLOG_LOGGER_* 宏可以自动包含源位置信息
+  SPDLOG_LOGGER_WARN(&logger, "AAA");
+  SPDLOG_LOGGER_INFO(&logger, "BBB");
+  SPDLOG_LOGGER_ERROR(&logger, "CCC");
+  SPDLOG_LOGGER_CRITICAL(&logger, "DDD");
 }
