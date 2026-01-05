@@ -1,7 +1,5 @@
-project(HelloWorld)
 
-cxx_17()
-
+# 只在本目录可见
 set(required_libraries fmt::fmt)
 
 file(GLOB_RECURSE SOURCES ./*.cpp)

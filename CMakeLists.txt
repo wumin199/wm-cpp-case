@@ -14,6 +14,8 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug"
         Allowed values are Debug, Release")
 endif()
 
+cxx_17()
+
 # get version form ./CHANGELOG.md
 file(STRINGS CHANGELOG.md CHANGELOG_STRING REGEX)
 string(REGEX MATCH "[0-9]+.[0-9]+.[0-9]+" CONTROL_VERSION ${CHANGELOG_STRING})
@@ -46,7 +48,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(Eigen3 3.4.1 REQUIRED CONFIG)
 find_package(fmt QUIET)
 find_package(yaml-cpp REQUIRED)
-find_package(GTest REQUIRED)
+find_package(GTest REQUIRED) # 官方已经不维护了
 
 
 # clang-tidy需要
