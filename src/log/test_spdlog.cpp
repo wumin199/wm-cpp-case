@@ -412,25 +412,51 @@ void replace_default_logger_example() {
 void wheel_log_example() {
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   console_sink->set_level(spdlog::level::debug);
-  // 格式：[时间] [文件名:行号] [线程号] [日志级别] 消息
   console_sink->set_pattern(
       "[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%^%l%$] %v");
 
   auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
       "logs/multisink.txt", true);
   file_sink->set_level(spdlog::level::debug);
-  // 文件中也记录详细信息
   file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%l] %v");
 
-  spdlog::logger logger("multi_sink", {console_sink, file_sink});
-  logger.set_level(spdlog::level::debug);
-  // logger.warn("AAA");
-  // logger.info("BBB");
-  // logger.error("CCC");
+  // 使用多个 _mt sink 创建线程安全的 logger
+  auto logger = std::make_shared<spdlog::logger>(
+      "robot_control", spdlog::sinks_init_list{console_sink, file_sink});
+  logger->set_level(spdlog::level::debug);
 
-  // 使用 SPDLOG_LOGGER_* 宏可以自动包含源位置信息
-  SPDLOG_LOGGER_WARN(&logger, "AAA");
-  SPDLOG_LOGGER_INFO(&logger, "BBB");
-  SPDLOG_LOGGER_ERROR(&logger, "CCC");
-  SPDLOG_LOGGER_CRITICAL(&logger, "DDD");
+  // 设置刷新策略
+  logger->flush_on(spdlog::level::warn);                // warn 以上立即刷新
+  spdlog::flush_every(std::chrono::milliseconds(500));  // 500ms 刷新一次
+
+  // 注册到全局注册表，便于其他地方使用
+  spdlog::register_logger(logger);
+
+  // 现在可以安全地在多个线程中使用
+  SPDLOG_LOGGER_DEBUG(logger.get(), "Debug info");
+  SPDLOG_LOGGER_INFO(logger.get(), "Info message");
+  SPDLOG_LOGGER_WARN(logger.get(), "Warning - immediate flush");
+  SPDLOG_LOGGER_ERROR(logger.get(), "Error - immediate flush");
+  SPDLOG_LOGGER_CRITICAL(logger.get(), "Critical - immediate flush");
+
+  // 模拟多线程使用
+  std::thread t1([logger]() {
+    for (int i = 0; i < 5; i++) {
+      SPDLOG_LOGGER_INFO(logger.get(), "Thread 1 message {}", i);
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  });
+
+  std::thread t2([logger]() {
+    for (int i = 0; i < 5; i++) {
+      SPDLOG_LOGGER_WARN(logger.get(), "Thread 2 message {}", i);
+      std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    }
+  });
+
+  t1.join();
+  t2.join();
+
+  // 确保所有日志被写入
+  logger->flush();
 }
