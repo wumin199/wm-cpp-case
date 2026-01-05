@@ -2,3 +2,6 @@
 
 add_executable(test_spdlog test_spdlog.cpp)
 target_link_libraries(test_spdlog PRIVATE spdlog::spdlog)
+
+add_executable(test_glog test_glog.cpp)
+target_link_libraries(test_glog PRIVATE ${glog_LIBRARIES})

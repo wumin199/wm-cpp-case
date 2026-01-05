@@ -32,17 +32,14 @@ message(STATUS "CONTROL_VERSION = ${CONTROL_VERSION}")
 # set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 
-include_directories(
-  include
-  3rdparty
-)
-
 # 官方已经不维护glog，建议使用spdlog
 find_package(glog REQUIRED)
 if(glog_FOUND)
     set(glog_LIBRARIES glog::glog)
+    MESSAGE(STATUS "glog found: ${glog_LIBRARIES}")
 else()
     set(glog_LIBRARIES glog)
+    MESSAGE(STATUS "glog not found, use default: ${glog_LIBRARIES}")
 endif()
 
 find_package(nlohmann_json REQUIRED)
@@ -52,6 +49,11 @@ find_package(yaml-cpp REQUIRED)
 find_package(GTest REQUIRED)
 find_package(spdlog REQUIRED)
 
+
+include_directories(
+  include
+  3rdparty
+)
 
 # clang-tidy需要
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

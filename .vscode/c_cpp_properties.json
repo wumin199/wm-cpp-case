@@ -4,7 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/wm-vcpkg/installed/x64-linux/include"
+                "/opt/wm-vcpkg/installed/x64-linux/include",
+                "/opt/wm-vcpkg/installed/x64-linux/include/glog",
+                "/opt/wm-vcpkg/installed/x64-linux/include/gflags"
             ],
             "defines": [],
             // "compilerPath": "/usr/bin/clang",
