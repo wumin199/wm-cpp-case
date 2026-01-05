@@ -1,13 +1,17 @@
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include <iostream>
 
 void basic_logging_example();
 void stdout_example();
+void basic_logfile_example();
 
 int main() {
   //   basic_logging_example();
-  stdout_example();
+  //   stdout_example();
+  basic_logfile_example();
   return 0;
 }
 
@@ -64,4 +68,14 @@ void stdout_example() {
   spdlog::get("console")->info(
       "loggers can be retrieved from a global registry using the "
       "spdlog::get(logger_name)");
+}
+
+void basic_logfile_example() {
+  try {
+    auto logger = spdlog::basic_logger_mt("basic_logger", "logs/basic-log.txt");
+  } catch (const spdlog::spdlog_ex& ex) {
+    std::cout << "Log init failed: " << ex.what() << std::endl;
+    return;
+  }
+  spdlog::get("basic_logger")->info("This is a basic file logger");
 }
