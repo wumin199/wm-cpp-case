@@ -9,6 +9,8 @@
 #include "spdlog/sinks/callback_sink.h"
 #include "spdlog/async.h"
 #include "spdlog/pattern_formatter.h"
+#include "spdlog/sinks/syslog_sink.h"
+#include "spdlog/cfg/env.h"
 
 #include <iostream>
 
@@ -27,6 +29,10 @@ void async_example();
 void multi_sink_example2();
 void user_defined_example();
 void custom_flags_example();
+void syslog_example();
+void load_levels_example();
+void file_events_example();
+void replace_default_logger_example();
 
 int main() {
   //   basic_logging_example();
@@ -43,7 +49,11 @@ int main() {
   // async_example();
   // multi_sink_example2();
   // user_defined_example();
-  custom_flags_example();
+  // custom_flags_example();
+  // syslog_example();
+  // load_levels_example();
+  // file_events_example();
+  replace_default_logger_example();
   return 0;
 }
 
@@ -329,4 +339,57 @@ void custom_flags_example() {
   formatter->add_flag<my_formatter_flag>('*').set_pattern(
       "[%n] [%*] [%^%l%$] %v");
   spdlog::set_formatter(std::move(formatter));
+  spdlog::info("This log message should contain custom flag output");
+}
+
+void syslog_example() {
+  std::string ident = "spdlog-example";
+  auto syslog_logger = spdlog::syslog_logger_mt("syslog", ident, LOG_PID);
+  syslog_logger->warn("This is warning that will end up in syslog.");
+}
+
+void load_levels_example() {
+  // Set the log level to "info" and mylogger to "trace":
+  // SPDLOG_LEVEL=info,mylogger=trace && ./example
+  spdlog::cfg::load_env_levels();
+  // or specify the env variable name:
+  // MYAPP_LEVEL=info,mylogger=trace && ./example
+  // spdlog::cfg::load_env_levels("MYAPP_LEVEL");
+  // or from command line:
+  // ./example SPDLOG_LEVEL=info,mylogger=trace
+  // #include "spdlog/cfg/argv.h" // for loading levels from argv
+  // spdlog::cfg::load_argv_levels(args, argv);
+}
+
+// You can get callbacks from spdlog before/after a log file has been opened or
+// closed. This is useful for cleanup procedures or for adding something to the
+// start/end of the log file.
+void file_events_example() {
+  // pass the spdlog::file_event_handlers to file sinks for open/close log file
+  // notifications
+  spdlog::file_event_handlers handlers;
+  handlers.before_open = [](spdlog::filename_t filename) {
+    spdlog::info("Before opening {}", filename);
+  };
+  handlers.after_open = [](spdlog::filename_t filename, std::FILE* fstream) {
+    fputs("After opening\n", fstream);
+  };
+  handlers.before_close = [](spdlog::filename_t filename, std::FILE* fstream) {
+    fputs("Before closing\n", fstream);
+  };
+  handlers.after_close = [](spdlog::filename_t filename) {
+    spdlog::info("After closing {}", filename);
+  };
+  auto my_logger = spdlog::basic_logger_st(
+      "some_logger", "logs/events-sample.txt", true, handlers);
+  my_logger->info("This is my first log message");
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  my_logger->info("This is my second log message");
+}
+
+void replace_default_logger_example() {
+  auto new_logger = spdlog::basic_logger_mt("new_default_logger",
+                                            "logs/new-default-log.txt", true);
+  spdlog::set_default_logger(new_logger);
+  spdlog::info("new logger log message");
 }
