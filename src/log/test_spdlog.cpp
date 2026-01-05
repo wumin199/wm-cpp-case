@@ -4,6 +4,11 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/stopwatch.h"
+#include "spdlog/fmt/bin_to_hex.h"
+#include "spdlog/sinks/callback_sink.h"
+#include "spdlog/async.h"
+#include "spdlog/pattern_formatter.h"
 
 #include <iostream>
 
@@ -14,6 +19,14 @@ void rotating_example();
 void daily_example();
 void backtrace_example();
 void periodic_flushing_example();
+void stopwatch_example();
+void binary_example();
+void multi_sink_example();
+void callback_example();
+void async_example();
+void multi_sink_example2();
+void user_defined_example();
+void custom_flags_example();
 
 int main() {
   //   basic_logging_example();
@@ -22,11 +35,20 @@ int main() {
   // rotating_example();
   // daily_example();
   // backtrace_example();
-  periodic_flushing_example();
+  // periodic_flushing_example();
+  // stopwatch_example();
+  // binary_example();
+  // multi_sink_example();
+  // callback_example();
+  // async_example();
+  // multi_sink_example2();
+  // user_defined_example();
+  custom_flags_example();
   return 0;
 }
 
 void basic_logging_example() {
+  // 默认日志器会输出到控制台
   spdlog::info("Welcome to spdlog!");
   spdlog::error("Some error message with arg: {}", 1);
 
@@ -177,4 +199,134 @@ void periodic_flushing_example() {
   std::cout << "\nProgram finished. Check logs/periodic.txt to see 5-second "
                "flush intervals."
             << std::endl;
+}
+
+void stopwatch_example() {
+  // 秒表
+  spdlog::stopwatch sw;
+  std::this_thread::sleep_for(std::chrono::milliseconds(1211));
+  spdlog::info("Elapsed {}", sw);
+  spdlog::info("Elapsed {:.3}", sw);
+}
+
+void binary_example() {
+  auto console_log = spdlog::stdout_color_mt("console");
+  auto console = spdlog::get("console");
+  std::array<char, 80> buf;
+  console->info("Binary example: {}", spdlog::to_hex(buf));
+  console->info("Another binary example:{:n}",
+                spdlog::to_hex(std::begin(buf), std::begin(buf) + 10));
+  // more examples:
+  // logger->info("uppercase: {:X}", spdlog::to_hex(buf));
+  // logger->info("uppercase, no delimiters: {:Xs}", spdlog::to_hex(buf));
+  // logger->info("uppercase, no delimiters, no position info: {:Xsp}",
+  // spdlog::to_hex(buf));
+}
+
+// create a logger with 2 targets, with different log levels and formats.
+// The console will show only warnings or errors, while the file will log all.
+void multi_sink_example() {
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  console_sink->set_level(spdlog::level::warn);
+  console_sink->set_pattern("[multi_sink_example] [%^%l%$] %v");
+
+  auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+      "logs/multisink.txt", true);
+  file_sink->set_level(spdlog::level::trace);
+
+  spdlog::logger logger("multi_sink", {console_sink, file_sink});
+  logger.set_level(spdlog::level::debug);
+  logger.warn("this should appear in both console and file");
+  logger.info(
+      "this message should not appear in the console, only in the file");
+}
+
+// create a logger with a lambda function callback, the callback will be called
+// each time something is logged to the logger
+void callback_example() {
+  auto callback_sink = std::make_shared<spdlog::sinks::callback_sink_mt>(
+      [](const spdlog::details::log_msg& msg) {
+        // for example you can be notified by sending an email to yourself
+        std::cout << "Callback sink received log: "
+                  << fmt::to_string(msg.payload) << std::endl;
+      });
+  callback_sink->set_level(spdlog::level::err);
+
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  spdlog::logger logger("custom_callback_logger",
+                        {console_sink, callback_sink});
+
+  logger.info("some info log");
+  logger.error("critical issue");  // will notify you
+}
+
+void async_example() {
+  // 高性能服务器：需要大量记录日志，但不能阻塞业务逻辑
+  // 实时游戏：每帧需要记录日志，但不能掉帧
+
+  // Default thread pool settings can be modified *before* creating the async
+  // logger: spdlog::init_thread_pool(32768, 1); // queue with max 32k items 1
+  // backing thread.
+  auto async_file = spdlog::basic_logger_mt<spdlog::async_factory>(
+      "async_file_logger", "logs/async_log.txt");
+  // alternatively:
+  // auto async_file =
+  // spdlog::create_async<spdlog::sinks::basic_file_sink_mt>("async_file_logger",
+  // "logs/async_log.txt");
+
+  for (int i = 1; i < 101; ++i) {
+    async_file->info("Async message #{}", i);
+  }
+}
+
+void multi_sink_example2() {
+  spdlog::init_thread_pool(8192, 1);
+  auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+      "mylog.txt", 1024 * 1024 * 10, 3);
+  std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
+  auto logger = std::make_shared<spdlog::async_logger>(
+      "loggername", sinks.begin(), sinks.end(), spdlog::thread_pool(),
+      spdlog::async_overflow_policy::block);
+  spdlog::register_logger(logger);
+  logger->info("This is a test message for multi sink async logger");
+}
+
+// User defined types logging
+struct my_type {
+  int i = 0;
+  explicit my_type(int i) : i(i) {}
+};
+template <>
+struct fmt::formatter<my_type> : fmt::formatter<std::string> {
+  auto format(my_type my, format_context& ctx) const -> decltype(ctx.out()) {
+    return fmt::format_to(ctx.out(), "[my_type i={}]", my.i);
+  }
+};
+
+void user_defined_example() {
+  spdlog::info("user defined type: {}", my_type(14));
+}
+
+class my_formatter_flag : public spdlog::custom_flag_formatter {
+ public:
+  void format(const spdlog::details::log_msg&, const std::tm&,
+              spdlog::memory_buf_t& dest) override {
+    std::string some_txt = "custom-flag";
+    dest.append(some_txt.data(), some_txt.data() + some_txt.size());
+  }
+
+  std::unique_ptr<custom_flag_formatter> clone() const override {
+    return spdlog::details::make_unique<my_formatter_flag>();
+  }
+};
+
+// Log patterns can contain custom flags.
+// the following example will add new flag '%*' - which will be bound to a
+// <my_formatter_flag> instance.
+void custom_flags_example() {
+  auto formatter = std::make_unique<spdlog::pattern_formatter>();
+  formatter->add_flag<my_formatter_flag>('*').set_pattern(
+      "[%n] [%*] [%^%l%$] %v");
+  spdlog::set_formatter(std::move(formatter));
 }
