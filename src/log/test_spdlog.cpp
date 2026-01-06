@@ -413,9 +413,15 @@ void replace_default_logger_example() {
   spdlog::info("new logger log message");
 }
 
-// 生成带时间戳的日志文件名：executable_name.YYYYMMDD-HHMMSS.microseconds.log
+// 从 argv[0] 中提取可执行文件名
+std::string ExtractExecutableName(const char* argv0) {
+  std::filesystem::path path(argv0);
+  return path.filename().string();  // 提取文件名，去掉路径
+}
+
+// 生成带时间戳的日志文件名：log_file_name.YYYYMMDD-HHMMSS.microseconds.log
 std::string GenerateLogFilename(const std::string& log_dir,
-                                const std::string& executable_name) {
+                                const std::string& log_file_name) {
   // 确保日志目录存在
   if (!std::filesystem::exists(log_dir)) {
     std::filesystem::create_directories(log_dir);
@@ -445,8 +451,8 @@ std::string GenerateLogFilename(const std::string& log_dir,
   std::string micro_str = micro_oss.str();
 
   // 组合日志文件名: executable_name.YYYYMMDD-HHMMSS.xxxxx.log
-  return log_dir + "/" + executable_name + "." + datetime_str + "." +
-         micro_str + ".log";
+  return log_dir + "/" + log_file_name + "." + datetime_str + "." + micro_str +
+         ".log";
 }
 
 void wheel_log_example() {
@@ -461,7 +467,7 @@ void wheel_log_example() {
   // 使用带日期的日志文件名
   std::string log_filename = GenerateLogFilename("logs", "test_spdlog");
   // 使用 rotating file sink：100 MB 每个文件，保留 3 个文件
-  const size_t max_file_size = 1024 * 1024 * 100;  // 100 MB
+  const size_t max_file_size = 100 * 1024 * 1024;  // 100 MB
   const size_t max_files = 3;
   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
       log_filename, max_file_size, max_files);
