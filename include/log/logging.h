@@ -76,7 +76,13 @@ class SpdlogHelper {
 
     auto expanded_log_dir = ExpandPath(log_dir);
     if (!std::filesystem::exists(expanded_log_dir)) {
-      std::filesystem::create_directories(expanded_log_dir);
+      try {
+        std::filesystem::create_directories(expanded_log_dir);
+      } catch (const std::exception& e) {
+        throw std::runtime_error(
+            "Failed to create log directory: " + expanded_log_dir.string() +
+            ", error: " + e.what());
+      }
     }
 
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
