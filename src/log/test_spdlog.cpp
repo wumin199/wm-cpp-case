@@ -451,7 +451,7 @@ std::string GenerateLogFilename(const std::string& log_dir,
 
 void wheel_log_example() {
   // TODO(min.wu): 100M
-  // TODO(min.wu): 保留 5 个文件
+  // TODO(min.wu): 保留 3 个文件
 
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   console_sink->set_level(spdlog::level::debug);
@@ -460,8 +460,8 @@ void wheel_log_example() {
 
   // 使用带日期的日志文件名
   std::string log_filename = GenerateLogFilename("logs", "test_spdlog");
-  // 使用 rotating file sink：1MB 每个文件，保留 5 个文件
-  const size_t max_file_size = 1024 * 1024 * 1;  // 1 MB
+  // 使用 rotating file sink：100 MB 每个文件，保留 3 个文件
+  const size_t max_file_size = 1024 * 1024 * 100;  // 100 MB
   const size_t max_files = 3;
   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
       log_filename, max_file_size, max_files);
