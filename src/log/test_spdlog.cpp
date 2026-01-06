@@ -5,6 +5,8 @@
  * Author: Min.Wu <wumin@126.com>, 2026/01/05
  */
 
+#include "log/logging.h"
+
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -51,10 +53,11 @@ void load_levels_example();
 void file_events_example();
 void replace_default_logger_example();
 void wheel_log_example();
+void log_helper_example();
 
 int main() {
-  //   basic_logging_example();
-  //   stdout_example();
+  // basic_logging_example();
+  // stdout_example();
   // basic_logfile_example();
   // rotating_example();
   // daily_example();
@@ -72,7 +75,8 @@ int main() {
   // load_levels_example();
   // file_events_example();
   // replace_default_logger_example();
-  wheel_log_example();
+  // wheel_log_example();
+  log_helper_example();
   return 0;
 }
 
@@ -456,9 +460,6 @@ std::string GenerateLogFilename(const std::string& log_dir,
 }
 
 void wheel_log_example() {
-  // TODO(min.wu): 100M
-  // TODO(min.wu): 保留 3 个文件
-
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   console_sink->set_level(spdlog::level::debug);
   // 格式：[YYYY-MM-DD HH:MM:SS.mmmmmm thread_id file:line level] msg
@@ -517,4 +518,13 @@ void wheel_log_example() {
 
   // 确保所有日志被写入
   logger->flush();
+}
+
+void log_helper_example() {
+  common::SpdlogHelper log_helper{};
+  try {
+    log_helper.SetLogPath("~/wuminlog", "wheel_log");
+  } catch (const std::exception& e) {
+    std::cerr << "Failed to set log path: " << e.what() << std::endl;
+  }
 }
