@@ -53,9 +53,9 @@ void load_levels_example();
 void file_events_example();
 void replace_default_logger_example();
 void wheel_log_example();
-void log_helper_example();
+void log_helper_example(const std::string& log_file_name);
 
-int main() {
+int main(int argc, char** argv) {
   // basic_logging_example();
   // stdout_example();
   // basic_logfile_example();
@@ -76,7 +76,7 @@ int main() {
   // file_events_example();
   // replace_default_logger_example();
   // wheel_log_example();
-  log_helper_example();
+  log_helper_example(argv[0]);
   return 0;
 }
 
@@ -520,11 +520,7 @@ void wheel_log_example() {
   logger->flush();
 }
 
-void log_helper_example() {
+void log_helper_example(const std::string& log_file_name) {
   common::SpdlogHelper log_helper{};
-  try {
-    log_helper.SetLogPath("~/wuminlog", "wheel_log");
-  } catch (const std::exception& e) {
-    std::cerr << "Failed to set log path: " << e.what() << std::endl;
-  }
+  log_helper.SetLogPath("~/wheel_logs/system_node", log_file_name);
 }
