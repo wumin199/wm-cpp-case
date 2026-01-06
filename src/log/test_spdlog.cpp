@@ -412,13 +412,12 @@ void replace_default_logger_example() {
 void wheel_log_example() {
   auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   console_sink->set_level(spdlog::level::debug);
-  console_sink->set_pattern(
-      "[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%^%l%$] %v");
+  console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e %s:%# %t] [%^%l%$] %v");
 
   auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
       "logs/multisink.txt", true);
   file_sink->set_level(spdlog::level::debug);
-  file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%s:%#] [thread %t] [%l] %v");
+  file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e %s:%# %t] [%l] %v");
 
   // 使用多个 _mt sink 创建线程安全的 logger
   auto logger = std::make_shared<spdlog::logger>(
