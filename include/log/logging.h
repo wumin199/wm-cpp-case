@@ -87,8 +87,8 @@ class SpdlogHelper {
 
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     console_sink->set_level(spdlog::level::info);
-    // 格式：[YYYY-MM-DD HH:MM:SS.mmmmmm thread_id file:line level] msg
-    console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %t %s:%# %^%l%$] %v");
+    // 格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line thread_id level] msg
+    console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %s:%# %t %^%l%$] %v");
 
     std::string log_filename =
         GenerateLogFilename(expanded_log_dir, log_file_name);
@@ -98,7 +98,7 @@ class SpdlogHelper {
     auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
         log_filename, max_file_size, max_files);
     file_sink->set_level(spdlog::level::info);
-    file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %t %s:%# %l] %v");
+    file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %s:%# %t %l] %v");
 
     logger_ = std::make_shared<spdlog::logger>(
         log_file_name, spdlog::sinks_init_list{console_sink, file_sink});
