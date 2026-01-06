@@ -460,8 +460,11 @@ void wheel_log_example() {
 
   // 使用带日期的日志文件名
   std::string log_filename = GenerateLogFilename("logs", "test_spdlog");
-  auto file_sink =
-      std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_filename, true);
+  // 使用 rotating file sink：1MB 每个文件，保留 5 个文件
+  const size_t max_file_size = 1024 * 1024 * 1;  // 1 MB
+  const size_t max_files = 3;
+  auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+      log_filename, max_file_size, max_files);
   file_sink->set_level(spdlog::level::info);
   // 文件格式同样使用微秒精度
   file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %t %s:%# %l] %v");
