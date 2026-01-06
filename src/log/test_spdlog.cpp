@@ -523,4 +523,9 @@ void wheel_log_example() {
 void log_helper_example(const std::string& log_file_name) {
   common::SpdlogHelper log_helper{};
   log_helper.SetLogPath("~/wheel_logs/system_node", log_file_name);
+  common::InitializeWheelLogger(&log_helper);
+
+  WHEEL_LOG_INFO("Log helper initialized with file name: {}", log_file_name);
+  WHEEL_LOG_WARNING("This is a warning message from log helper example.");
+  WHEEL_LOG_ERROR("This is an error message from log helper example.");
 }
