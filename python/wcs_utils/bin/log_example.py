@@ -19,7 +19,7 @@ from wcs_utils.logger.glog import logger, set_log_save_path  # noqa: E402
 
 def logger_example():
     home_path = os.path.expanduser("~")
-    set_log_save_path(os.path.join(home_path, "wheel_logs/wcs_utils"))
+    set_log_save_path(os.path.join(home_path, "wcs_logs/wcs_utils"))
 
     logger.info("This is an info log message.")
     logger.warning("This is a warning log message.")

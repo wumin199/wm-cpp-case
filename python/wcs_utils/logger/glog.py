@@ -91,7 +91,7 @@ def set_level(new_level):
 
 
 def set_log_save_path(
-        folder_path=os.path.join(os.path.expanduser("~"), "xyz_log", "xyz_software_tool")):
+        folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils")):
     """ set log save path
 
     Args:
