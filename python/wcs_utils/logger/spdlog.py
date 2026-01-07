@@ -10,7 +10,6 @@ import logging
 import logging.handlers
 import os
 import sys
-import threading
 
 """A simple spdlog-style logging wrapper"""
 
@@ -62,27 +61,22 @@ class GlogColorFormatter(logging.Formatter):
         microseconds = int((record.created - int(record.created)) * 1e6)
         date_str = date.strftime('%Y-%m-%d %H:%M:%S')
 
-        # 获取线程 ID
-        thread_id = threading.current_thread().ident
-
         if self.use_color:
-            record_message = '[%s.%06d %s:%d %d %s%s%s] %s' % (
+            record_message = '[%s.%06d %s:%d %s%s%s] %s' % (
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
-                thread_id,
                 GlogColorFormatter.COLOR_MAP[record.levelno],
                 level,
                 GlogColorFormatter.RESET,
                 format_message(record))
         else:
-            record_message = '[%s.%06d %s:%d %d %s] %s' % (
+            record_message = '[%s.%06d %s:%d %s] %s' % (
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
-                thread_id,
                 level,
                 format_message(record))
 
@@ -156,16 +150,14 @@ _level_names = {
 
 _level_letters = [name[0] for name in _level_names.values()]
 
-# 正则表达式用于解析日志格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line thread_id level] msg
-SPDLOG_PREFIX_REGEX = (
-                        r"""
+# 正则表达式用于解析日志格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line level] msg
+SPDLOG_PREFIX_REGEX = (r"""
                         (?x) ^
                         \[
                         (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\s
                         (?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})
                         \.(?P<microsecond>\d{6})\s
                         (?P<filename>[a-zA-Z<_][\w._<>-]+):(?P<line>\d+)\s
-                        (?P<thread_id>\d+)\s
                         (?P<level>[a-z]+)
                         \]\s
                         """)

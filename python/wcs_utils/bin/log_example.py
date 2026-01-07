@@ -14,7 +14,7 @@ if os.path.exists(WCS_PY_ROOT):
     sys.path.insert(0, WCS_PY_ROOT)
 
 
-from wcs_utils.logger.glog import logger, set_log_save_path  # noqa: E402
+from python.wcs_utils.logger.spdlog import logger, set_log_save_path  # noqa: E402
 
 
 def logger_example():
