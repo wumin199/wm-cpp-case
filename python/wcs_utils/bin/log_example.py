@@ -22,6 +22,8 @@ def logger_example():
     set_log_save_path(os.path.join(home_path, "wcs_logs/wcs_utils"))
 
     logger.info("This is an info log message.")
+    logger.info("This is a formatted info log message: {}".format("Hello, World!"))
+    logger.info("This is a formatted info log message with args: {} and {}".format("test", 42))
     logger.warning("This is a warning log message.")
     logger.error("This is an error log message.")
 

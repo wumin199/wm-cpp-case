@@ -123,7 +123,7 @@ def set_log_save_path(
     else:
         now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     file_handler = logging.FileHandler(
-        filename=os.path.join(folder_path, "{}.{}".format(os.path.basename(sys.argv[0]), now)))
+        filename=os.path.join(folder_path, "{}.{}.log".format(os.path.basename(sys.argv[0]), now)))
     file_handler.setFormatter(GlogColorFormatter(use_color=False))
     logger.addHandler(file_handler)
 
