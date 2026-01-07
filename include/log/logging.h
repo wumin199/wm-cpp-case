@@ -48,7 +48,7 @@ class SpdlogHelper {
   /// @brief
   /// @param max_file_size_mb 单个日志文件最大大小（MB）
   /// @param max_log_files 最大保留的日志文件数量
-  explicit SpdlogHelper(size_t max_file_size_mb = 100,
+  explicit SpdlogHelper(size_t max_file_size_mb = 200,
                         size_t max_log_files = 3);
   ~SpdlogHelper();
 
