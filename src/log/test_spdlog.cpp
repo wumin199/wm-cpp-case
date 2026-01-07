@@ -5,8 +5,6 @@
  * Author: Min.Wu <wumin@126.com>, 2026/01/05
  */
 
-#include "log/logging.h"
-
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -53,7 +51,6 @@ void load_levels_example();
 void file_events_example();
 void replace_default_logger_example();
 void wheel_log_example();
-void log_helper_example(const std::string& log_file_name);
 
 int main(int argc, char** argv) {
   // basic_logging_example();
@@ -75,8 +72,7 @@ int main(int argc, char** argv) {
   // load_levels_example();
   // file_events_example();
   // replace_default_logger_example();
-  // wheel_log_example();
-  log_helper_example(argv[0]);
+  wheel_log_example();
   return 0;
 }
 
@@ -518,15 +514,4 @@ void wheel_log_example() {
 
   // 确保所有日志被写入
   logger->flush();
-}
-
-void log_helper_example(const std::string& log_file_name) {
-  common::SpdlogHelper log_helper{};
-  log_helper.SetLogPath("~/wheel_logs/system_node", log_file_name);
-  common::InitializeWheelLogger(&log_helper);
-
-  // 不能直接 WHEEL_LOG_INFO()空，或者WHEEL_LOG_INFO(123)数字
-  WHEEL_LOG_INFO("Log helper initialized with file name: {}", log_file_name);
-  WHEEL_LOG_WARNING("Some error message with arg: {}", 1.23);
-  WHEEL_LOG_ERROR("This is an error message from log helper example.");
 }
