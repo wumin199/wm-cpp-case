@@ -96,28 +96,39 @@ def set_level(new_level):
 
 
 def set_log_save_path(
-        folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils")):
-    """ set log save path
+        folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils"),
+        max_bytes=1 * 1024 * 1024,
+        backup_count=3):
+    """ set log save path with rotating file handler
 
     Args:
-        folder_path(str): folder path to save
+        folder_path(str): folder path to save logs
+        max_bytes(int): max bytes per log file (default: 200MB)
+        backup_count(int): number of backup files to keep (default: 3)
 
     """
-    # Try to remove file handler
+    # Try to remove old file handler
     global file_handler
     try:
-        logger.removeHandler(file_handler)
+        if file_handler is not None:
+            logger.removeHandler(file_handler)
+            file_handler.close()
     except Exception:
         pass
+
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    now = None
-    if sys.version_info >= (3, 0):
-        now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S.%f")
-    else:
-        now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S.%f")
-    file_handler = logging.FileHandler(
-        filename=os.path.join(folder_path, "{}.{}.log".format(os.path.basename(sys.argv[0]), now)))
+
+    now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S.%f")
+    log_filename = os.path.join(
+        folder_path,
+        "{}.{}.log".format(os.path.basename(sys.argv[0]), now))
+
+    # Use RotatingFileHandler for log rotation
+    file_handler = logging.handlers.RotatingFileHandler(
+        filename=log_filename,
+        maxBytes=max_bytes,
+        backupCount=backup_count)
     file_handler.setFormatter(GlogColorFormatter(use_color=False))
     logger.addHandler(file_handler)
 
