@@ -8,7 +8,7 @@ add_executable(test_glog test_glog.cpp)
 target_link_libraries(test_glog PRIVATE ${glog_LIBRARIES})
 
 add_library(log_utils SHARED logging.cpp)
-target_link_libraries(log_utils PRIVATE spdlog::spdlog)
+target_link_libraries(log_utils PUBLIC spdlog::spdlog)
 
 add_executable(wm_spdlog test_wm_spdlog.cpp)
-target_link_libraries(wm_spdlog PRIVATE log_utils spdlog::spdlog)
+target_link_libraries(wm_spdlog PRIVATE log_utils)
