@@ -12,7 +12,7 @@ import os
 import sys
 import threading
 
-"""A simple Google-style logging wrapper without gflags"""
+"""A simple spdlog-style logging wrapper"""
 
 
 def format_message(record):
@@ -34,13 +34,14 @@ class GlogColorFormatter(logging.Formatter):
 
     GREY = "\x1b[38;21m"
     YELLOW = "\x1b[33;21m"
+    GREEN = "\x1b[32;21m"
     RED = "\x1b[31;21m"
     BOLD_RED = "\x1b[31;1m"
     RESET = "\x1b[0m"
 
     COLOR_MAP = {
         logging.DEBUG: GREY,
-        logging.INFO: GREY,
+        logging.INFO: GREEN,
         logging.WARNING: YELLOW,
         logging.ERROR: RED,
         logging.CRITICAL: BOLD_RED,
@@ -65,18 +66,16 @@ class GlogColorFormatter(logging.Formatter):
         thread_id = threading.current_thread().ident
 
         if self.use_color:
-            record_message = '%s[%s.%06d %s:%d %d %s%s%s] %s%s' % (
-                GlogColorFormatter.COLOR_MAP[record.levelno],
+            record_message = '[%s.%06d %s:%d %d %s%s%s] %s' % (
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
                 thread_id,
+                GlogColorFormatter.COLOR_MAP[record.levelno],
                 level,
                 GlogColorFormatter.RESET,
-                GlogColorFormatter.COLOR_MAP[record.levelno],
-                format_message(record),
-                GlogColorFormatter.RESET)
+                format_message(record))
         else:
             record_message = '[%s.%06d %s:%d %d %s] %s' % (
                 date_str,
