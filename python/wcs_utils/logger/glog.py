@@ -10,7 +10,6 @@ import logging
 import logging.handlers
 import os
 import sys
-import time
 
 """A simple Google-style logging wrapper without gflags"""
 
@@ -25,11 +24,11 @@ def format_message(record):
 
 class GlogColorFormatter(logging.Formatter):
     LEVEL_MAP = {
-        logging.FATAL: 'F',  # FATAL is alias of CRITICAL
-        logging.ERROR: 'E',
-        logging.WARN: 'W',
-        logging.INFO: 'I',
-        logging.DEBUG: 'D'
+        logging.FATAL: 'fatal',  # FATAL is alias of CRITICAL
+        logging.ERROR: 'error',
+        logging.WARN: 'warning',
+        logging.INFO: 'info',
+        logging.DEBUG: 'debug'
     }
 
     GREY = "\x1b[38;21m"
@@ -55,26 +54,29 @@ class GlogColorFormatter(logging.Formatter):
             level = GlogColorFormatter.LEVEL_MAP[record.levelno]
         except KeyError:
             level = '?'
-        date = time.localtime(record.created)
-        date_usec = (record.created - int(record.created)) * 1e6
+
+        # 格式化时间为 YYYY-MM-DD HH:MM:SS.mmmmmm
+        date = datetime.datetime.fromtimestamp(record.created)
+        microseconds = int((record.created - int(record.created)) * 1e6)
+        date_str = date.strftime('%Y-%m-%d %H:%M:%S')
+
         if self.use_color:
-            record_message = '%s%c%02d%02d %02d:%02d:%02d.%06d %s %s:%d] %s%s' % (
-                GlogColorFormatter.COLOR_MAP[record.levelno],
-                level, date.tm_mon, date.tm_mday, date.tm_hour, date.tm_min,
-                date.tm_sec, date_usec,
-                record.process if record.process is not None else '?????',
+            record_message = '[%s.%06d %s:%d %s] %s' % (
+                date_str,
+                microseconds,
                 record.filename,
                 record.lineno,
-                format_message(record),
-                GlogColorFormatter.RESET)
-        else:
-            record_message = '%c%02d%02d %02d:%02d:%02d.%06d %s %s:%d] %s' % (
-                level, date.tm_mon, date.tm_mday, date.tm_hour, date.tm_min,
-                date.tm_sec, date_usec,
-                record.process if record.process is not None else '?????',
-                record.filename,
-                record.lineno,
+                level,
                 format_message(record))
+        else:
+            record_message = '[%s.%06d %s:%d %s] %s' % (
+                date_str,
+                microseconds,
+                record.filename,
+                record.lineno,
+                level,
+                format_message(record))
+
         record.getMessage = lambda: record_message
         return logging.Formatter.format(self, record)
 
