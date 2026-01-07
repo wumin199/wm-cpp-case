@@ -26,6 +26,10 @@
 #include <utility>
 #include <chrono>
 #include <thread>
+#include <filesystem>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 void basic_logging_example();
 void stdout_example();
@@ -46,10 +50,11 @@ void syslog_example();
 void load_levels_example();
 void file_events_example();
 void replace_default_logger_example();
+void wheel_log_example();
 
-int main() {
-  //   basic_logging_example();
-  //   stdout_example();
+int main(int argc, char** argv) {
+  // basic_logging_example();
+  // stdout_example();
   // basic_logfile_example();
   // rotating_example();
   // daily_example();
@@ -66,7 +71,8 @@ int main() {
   // syslog_example();
   // load_levels_example();
   // file_events_example();
-  replace_default_logger_example();
+  // replace_default_logger_example();
+  wheel_log_example();
   return 0;
 }
 
@@ -405,4 +411,107 @@ void replace_default_logger_example() {
                                             "logs/new-default-log.txt", true);
   spdlog::set_default_logger(new_logger);
   spdlog::info("new logger log message");
+}
+
+// 从 argv[0] 中提取可执行文件名
+std::string ExtractExecutableName(const char* argv0) {
+  std::filesystem::path path(argv0);
+  return path.filename().string();  // 提取文件名，去掉路径
+}
+
+// 生成带时间戳的日志文件名：log_file_name.YYYYMMDD-HHMMSS.microseconds.log
+std::string GenerateLogFilename(const std::string& log_dir,
+                                const std::string& log_file_name) {
+  // 确保日志目录存在
+  if (!std::filesystem::exists(log_dir)) {
+    std::filesystem::create_directories(log_dir);
+  }
+
+  // 获取当前时刻（包括微秒）
+  auto now = std::chrono::system_clock::now();
+  auto time = std::chrono::system_clock::to_time_t(now);
+  std::tm* timeinfo = std::localtime(&time);
+
+  // 获取微秒部分
+  auto duration = now.time_since_epoch();
+  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
+  auto microseconds =
+      std::chrono::duration_cast<std::chrono::microseconds>(duration) -
+      std::chrono::duration_cast<std::chrono::microseconds>(seconds);
+
+  // 格式化时间为 YYYYMMDD-HHMMSS
+  std::ostringstream oss;
+  oss << std::put_time(timeinfo, "%Y%m%d-%H%M%S");
+  std::string datetime_str = oss.str();
+
+  // 格式化微秒部分
+  std::ostringstream micro_oss;
+  micro_oss << std::setfill('0') << std::setw(5)
+            << (microseconds.count() / 10);  // 转换为 5 位数字（十微秒）
+  std::string micro_str = micro_oss.str();
+
+  // 组合日志文件名: executable_name.YYYYMMDD-HHMMSS.xxxxx.log
+  return log_dir + "/" + log_file_name + "." + datetime_str + "." + micro_str +
+         ".log";
+}
+
+void wheel_log_example() {
+  auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  console_sink->set_level(spdlog::level::debug);
+  // 格式：[YYYY-MM-DD HH:MM:SS.mmmmmm thread_id file:line level] msg
+  console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %t %s:%# %^%l%$] %v");
+
+  // 使用带日期的日志文件名
+  std::string log_filename = GenerateLogFilename("logs", "test_spdlog");
+  // 使用 rotating file sink：100 MB 每个文件，保留 3 个文件
+  const size_t max_file_size = 100 * 1024 * 1024;  // 100 MB
+  const size_t max_files = 3;
+  auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+      log_filename, max_file_size, max_files);
+  file_sink->set_level(spdlog::level::info);
+  // 文件格式同样使用微秒精度
+  file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %t %s:%# %l] %v");
+
+  // 使用多个 _mt sink 创建线程安全的 logger
+  auto logger = std::make_shared<spdlog::logger>(
+      "robot_control", spdlog::sinks_init_list{console_sink, file_sink});
+  logger->set_level(spdlog::level::info);
+
+  // 设置刷新策略
+  logger->flush_on(spdlog::level::info);  // info 以上立即刷新
+  spdlog::flush_every(
+      std::chrono::milliseconds(500));  // 低于info的，500ms 刷新一次
+
+  // 注册到全局注册表，便于其他地方使用
+  spdlog::register_logger(logger);
+
+  // 现在可以安全地在多个线程中使用
+  SPDLOG_LOGGER_DEBUG(logger.get(),
+                      "Debug info");  // 不会打印，需要用环境变量来开启
+  SPDLOG_LOGGER_INFO(logger.get(), "Info message");
+  SPDLOG_LOGGER_WARN(logger.get(), "Warning - immediate flush");
+  SPDLOG_LOGGER_ERROR(logger.get(), "Error - immediate flush");
+  SPDLOG_LOGGER_CRITICAL(logger.get(), "Critical - immediate flush");
+  std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+  // 模拟多线程使用
+  std::thread t1([logger]() {
+    for (int i = 0; i < 50000; i++) {
+      SPDLOG_LOGGER_INFO(logger.get(), "Thread 1 message {}", i);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  });
+
+  std::thread t2([logger]() {
+    for (int i = 0; i < 50000; i++) {
+      SPDLOG_LOGGER_WARN(logger.get(), "Thread 2 message {}", i);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+  });
+
+  t1.join();
+  t2.join();
+
+  // 确保所有日志被写入
+  logger->flush();
 }
