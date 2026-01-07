@@ -6,6 +6,7 @@
  */
 
 #include "log/logging.h"
+#include <string>
 
 void log_helper_example(const std::string& log_file_name);
 
