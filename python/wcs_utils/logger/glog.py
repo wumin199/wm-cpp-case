@@ -10,6 +10,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import threading
 
 """A simple Google-style logging wrapper without gflags"""
 
@@ -60,20 +61,29 @@ class GlogColorFormatter(logging.Formatter):
         microseconds = int((record.created - int(record.created)) * 1e6)
         date_str = date.strftime('%Y-%m-%d %H:%M:%S')
 
+        # 获取线程 ID
+        thread_id = threading.current_thread().ident
+
         if self.use_color:
-            record_message = '[%s.%06d %s:%d %s] %s' % (
+            record_message = '%s[%s.%06d %s:%d %d %s%s%s] %s%s' % (
+                GlogColorFormatter.COLOR_MAP[record.levelno],
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
+                thread_id,
                 level,
-                format_message(record))
+                GlogColorFormatter.RESET,
+                GlogColorFormatter.COLOR_MAP[record.levelno],
+                format_message(record),
+                GlogColorFormatter.RESET)
         else:
-            record_message = '[%s.%06d %s:%d %s] %s' % (
+            record_message = '[%s.%06d %s:%d %d %s] %s' % (
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
+                thread_id,
                 level,
                 format_message(record))
 
