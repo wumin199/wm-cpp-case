@@ -113,7 +113,7 @@ def set_log_save_path(
     global file_handler
     try:
         logger.removeHandler(file_handler)
-    except:
+    except Exception:
         pass
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
