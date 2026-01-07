@@ -156,17 +156,19 @@ _level_names = {
 
 _level_letters = [name[0] for name in _level_names.values()]
 
-GLOG_PREFIX_REGEX = (
+# 正则表达式用于解析日志格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line thread_id level] msg
+SPDLOG_PREFIX_REGEX = (
                         r"""
                         (?x) ^
-                        (?P<severity>[%s])
-                        (?P<month>\d\d)(?P<day>\d\d)\s
-                        (?P<hour>\d\d):(?P<minute>\d\d):(?P<second>\d\d)
-                        \.(?P<microsecond>\d{6})\s+
-                        (?P<process_id>-?\d+)\s
-                        (?P<filename>[a-zA-Z<_][\w._<>-]+):(?P<line>\d+)
+                        \[
+                        (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\s
+                        (?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})
+                        \.(?P<microsecond>\d{6})\s
+                        (?P<filename>[a-zA-Z<_][\w._<>-]+):(?P<line>\d+)\s
+                        (?P<thread_id>\d+)\s
+                        (?P<level>[a-z]+)
                         \]\s
-                        """) % ''.join(_level_letters)
-"""Regex you can use to parse glog line prefixes."""
+                        """)
+"""Regex you can use to parse spdlog line prefixes."""
 handler.setFormatter(GlogColorFormatter())
 logger.addHandler(handler)
