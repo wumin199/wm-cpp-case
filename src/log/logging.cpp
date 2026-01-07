@@ -7,15 +7,20 @@
 
 #include "log/logging.h"
 
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
 #include <chrono>
 #include <cstdlib>
-#include <sstream>
 #include <ctime>
+#include <exception>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace common {
@@ -28,9 +33,9 @@ std::shared_ptr<spdlog::logger> g_wheel_logger = nullptr;
 // ============================================================================
 
 SpdlogHelper::SpdlogHelper(size_t max_file_size_mb, size_t max_log_files)
-    : logger_(nullptr),
-      max_file_size_mb_(max_file_size_mb),
-      max_log_files_(max_log_files) {}
+    : logger_(nullptr),                     // NOLINT
+      max_file_size_mb_(max_file_size_mb),  // NOLINT
+      max_log_files_(max_log_files) {}      // NOLINT
 
 SpdlogHelper::~SpdlogHelper() {
   if (logger_) {
@@ -62,7 +67,7 @@ void SpdlogHelper::SetLogPath(const std::filesystem::path& log_dir,
   // 格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line thread_id level] msg
   console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%f %s:%# %t %^%l%$] %v");
 
-  std::string log_filename =
+  const std::string log_filename =
       GenerateLogFilename(expanded_log_dir, log_file_name);
   const size_t max_file_size = max_file_size_mb_ * 1024 * 1024;  // MB
   auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
@@ -103,16 +108,16 @@ std::string SpdlogHelper::GenerateLogFilename(
   // 格式化时间为 YYYYMMDD-HHMMSS
   std::ostringstream oss;
   oss << std::put_time(timeinfo, "%Y%m%d-%H%M%S");
-  std::string datetime_str = oss.str();
+  const std::string datetime_str = oss.str();
 
   // 格式化微秒部分
   std::ostringstream micro_oss;
   micro_oss << std::setfill('0') << std::setw(5)
             << (microseconds.count() / 10);  // 转换为 5 位数字（十微秒）
-  std::string micro_str = micro_oss.str();
+  const std::string micro_str = micro_oss.str();
 
   // 组合日志文件名: log_file_name.YYYYMMDD-HHMMSS.xxxxx.log
-  std::string filename =
+  const std::string filename =
       log_file_name + "." + datetime_str + "." + micro_str + ".log";
   return (log_dir / filename).string();
 }

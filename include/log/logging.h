@@ -48,7 +48,8 @@ class SpdlogHelper {
   /// @brief
   /// @param max_file_size_mb 单个日志文件最大大小（MB）
   /// @param max_log_files 最大保留的日志文件数量
-  SpdlogHelper(size_t max_file_size_mb = 100, size_t max_log_files = 3);
+  explicit SpdlogHelper(size_t max_file_size_mb = 100,
+                        size_t max_log_files = 3);
   ~SpdlogHelper();
 
   /// @brief 设置日志路径和文件名
@@ -68,7 +69,7 @@ class SpdlogHelper {
   /// @brief 展开路径中的 ~ 符号
   std::filesystem::path ExpandPath(std::filesystem::path path);
 
- private:
+ private:  // NOLINT
   std::shared_ptr<spdlog::logger> logger_;
   size_t max_log_files_ = 3;
   size_t max_file_size_mb_ = 100;  // MB
