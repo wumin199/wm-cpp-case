@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   FLAGS_colorlogtostderr = true;
   FLAGS_max_log_size = 10;
   FLAGS_stop_logging_if_full_disk = true;
-  FLAGS_log_dir = "./logs/xyz_robot_driver_node";
+  FLAGS_log_dir = "wcs_logs/glog";  // 相当于当前可执行目录
 
   const std::filesystem::file_status file_status =
       std::filesystem::status(FLAGS_log_dir);

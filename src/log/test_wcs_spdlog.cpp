@@ -17,11 +17,11 @@ int main(int argc, char** argv) {
 
 void log_helper_example(const std::string& log_file_name) {
   common::SpdlogHelper log_helper{};
-  log_helper.SetLogPath("~/wheel_logs/system_node", log_file_name);
+  log_helper.SetLogPath("~/wcs_logs", log_file_name);
   common::InitializeWheelLogger(&log_helper);
 
-  // 不能直接 WHEEL_LOG_INFO()空，或者WHEEL_LOG_INFO(123)数字
-  WHEEL_LOG_INFO("Log helper initialized with file name: {}", log_file_name);
-  WHEEL_LOG_WARNING("Some error message with arg: {}", 1.23);
-  WHEEL_LOG_ERROR("This is an error message from log helper example.");
+  // 不能直接 WCS_LOG_INFO()空，或者WCS_LOG_INFO(123)数字
+  WCS_LOG_INFO("Log helper initialized with file name: {}", log_file_name);
+  WCS_LOG_WARNING("Some error message with arg: {}", 1.23);
+  WCS_LOG_ERROR("This is an error message from log helper example.");
 }

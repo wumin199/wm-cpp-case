@@ -16,7 +16,7 @@ import sys
 
 def format_message(record):
     try:
-        record_message = '%s' % (record.msg % record.args)
+        record_message = "%s" % (record.msg % record.args)
     except TypeError:
         record_message = record.msg
     return record_message
@@ -24,11 +24,11 @@ def format_message(record):
 
 class GlogColorFormatter(logging.Formatter):
     LEVEL_MAP = {
-        logging.FATAL: 'fatal',  # FATAL is alias of CRITICAL
-        logging.ERROR: 'error',
-        logging.WARN: 'warning',
-        logging.INFO: 'info',
-        logging.DEBUG: 'debug'
+        logging.FATAL: "fatal",  # FATAL is alias of CRITICAL
+        logging.ERROR: "error",
+        logging.WARN: "warning",
+        logging.INFO: "info",
+        logging.DEBUG: "debug",
     }
 
     GREY = "\x1b[38;21m"
@@ -54,15 +54,15 @@ class GlogColorFormatter(logging.Formatter):
         try:
             level = GlogColorFormatter.LEVEL_MAP[record.levelno]
         except KeyError:
-            level = '?'
+            level = "?"
 
         # 格式化时间为 YYYY-MM-DD HH:MM:SS.mmmmmm
         date = datetime.datetime.fromtimestamp(record.created)
         microseconds = int((record.created - int(record.created)) * 1e6)
-        date_str = date.strftime('%Y-%m-%d %H:%M:%S')
+        date_str = date.strftime("%Y-%m-%d %H:%M:%S")
 
         if self.use_color:
-            record_message = '[%s.%06d %s:%d %s%s%s] %s' % (
+            record_message = "[%s.%06d %s:%d %s%s%s] %s" % (
                 date_str,
                 microseconds,
                 record.filename,
@@ -70,15 +70,17 @@ class GlogColorFormatter(logging.Formatter):
                 GlogColorFormatter.COLOR_MAP[record.levelno],
                 level,
                 GlogColorFormatter.RESET,
-                format_message(record))
+                format_message(record),
+            )
         else:
-            record_message = '[%s.%06d %s:%d %s] %s' % (
+            record_message = "[%s.%06d %s:%d %s] %s" % (
                 date_str,
                 microseconds,
                 record.filename,
                 record.lineno,
                 level,
-                format_message(record))
+                format_message(record),
+            )
 
         record.getMessage = lambda: record_message
         return logging.Formatter.format(self, record)
@@ -92,14 +94,15 @@ file_handler = None
 
 def set_level(new_level):
     logger.setLevel(new_level)
-    logger.debug('Log level set to %s', new_level)
+    logger.debug("Log level set to %s", new_level)
 
 
 def set_log_save_path(
-        folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils"),
-        max_bytes=200 * 1024 * 1024,
-        backup_count=3):
-    """ set log save path with rotating file handler
+    folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils"),
+    max_bytes=200 * 1024 * 1024,
+    backup_count=3,
+):
+    """set log save path with rotating file handler
 
     Args:
         folder_path(str): folder path to save logs
@@ -121,14 +124,13 @@ def set_log_save_path(
 
     now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S.%f")
     log_filename = os.path.join(
-        folder_path,
-        "{}.{}.log".format(os.path.basename(sys.argv[0]), now))
+        folder_path, "{}.{}.log".format(os.path.basename(sys.argv[0]), now)
+    )
 
     # Use RotatingFileHandler for log rotation
     file_handler = logging.handlers.RotatingFileHandler(
-        filename=log_filename,
-        maxBytes=max_bytes,
-        backupCount=backup_count)
+        filename=log_filename, maxBytes=max_bytes, backupCount=backup_count
+    )
     file_handler.setFormatter(GlogColorFormatter(use_color=False))
     logger.addHandler(file_handler)
 
@@ -152,17 +154,17 @@ ERROR = logging.ERROR
 FATAL = logging.FATAL
 
 _level_names = {
-    DEBUG: 'DEBUG',
-    INFO: 'INFO',
-    WARN: 'WARN',
-    ERROR: 'ERROR',
-    FATAL: 'FATAL'
+    DEBUG: "DEBUG",
+    INFO: "INFO",
+    WARN: "WARN",
+    ERROR: "ERROR",
+    FATAL: "FATAL",
 }
 
 _level_letters = [name[0] for name in _level_names.values()]
 
 # 正则表达式用于解析日志格式：[YYYY-MM-DD HH:MM:SS.mmmmmm file:line level] msg
-SPDLOG_PREFIX_REGEX = (r"""
+SPDLOG_PREFIX_REGEX = r"""
                         (?x) ^
                         \[
                         (?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})\s
@@ -171,7 +173,7 @@ SPDLOG_PREFIX_REGEX = (r"""
                         (?P<filename>[a-zA-Z<_][\w._<>-]+):(?P<line>\d+)\s
                         (?P<level>[a-z]+)
                         \]\s
-                        """)
+                        """
 """Regex you can use to parse spdlog line prefixes."""
 handler.setFormatter(GlogColorFormatter())
 logger.addHandler(handler)
