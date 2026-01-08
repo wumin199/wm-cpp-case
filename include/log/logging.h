@@ -20,27 +20,27 @@ class SpdlogHelper;
 void InitializeWheelLogger(SpdlogHelper* helper);
 
 /// @brief 便利宏：用于日志输出
-/// @details 使用示例：WHEEL_LOG_INFO("message {}", value);
-#define WHEEL_LOG_TRACE(fmt, ...) \
-  if (::common::g_wheel_logger)   \
+/// @details 使用示例：WCS_LOG_INFO("message {}", value);
+#define WCS_LOG_TRACE(fmt, ...) \
+  if (::common::g_wheel_logger) \
   SPDLOG_LOGGER_TRACE(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_DEBUG(fmt, ...) \
-  if (::common::g_wheel_logger)   \
+#define WCS_LOG_DEBUG(fmt, ...) \
+  if (::common::g_wheel_logger) \
   SPDLOG_LOGGER_DEBUG(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_INFO(fmt, ...) \
-  if (::common::g_wheel_logger)  \
+#define WCS_LOG_INFO(fmt, ...)  \
+  if (::common::g_wheel_logger) \
   SPDLOG_LOGGER_INFO(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_WARN(fmt, ...) \
-  if (::common::g_wheel_logger)  \
+#define WCS_LOG_WARN(fmt, ...)  \
+  if (::common::g_wheel_logger) \
   SPDLOG_LOGGER_WARN(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_WARNING(fmt, ...) \
-  if (::common::g_wheel_logger)     \
-  SPDLOG_LOGGER_WARN(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_ERROR(fmt, ...) \
+#define WCS_LOG_WARNING(fmt, ...) \
   if (::common::g_wheel_logger)   \
+  SPDLOG_LOGGER_WARN(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
+#define WCS_LOG_ERROR(fmt, ...) \
+  if (::common::g_wheel_logger) \
   SPDLOG_LOGGER_ERROR(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
-#define WHEEL_LOG_CRITICAL(fmt, ...) \
-  if (::common::g_wheel_logger)      \
+#define WCS_LOG_CRITICAL(fmt, ...) \
+  if (::common::g_wheel_logger)    \
   SPDLOG_LOGGER_CRITICAL(::common::g_wheel_logger.get(), fmt, ##__VA_ARGS__)
 
 class SpdlogHelper {
