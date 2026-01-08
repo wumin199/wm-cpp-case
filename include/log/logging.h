@@ -55,7 +55,7 @@ class SpdlogHelper {
   /// @brief 设置日志路径和文件名
   /// @param log_dir 日志目录（支持 ~ 展开）
   /// @param log_file_name 日志文件名（不包含后缀）
-  void SetLogPath(const std::filesystem::path& log_dir = "~/wheel_logs",
+  void SetLogPath(const std::filesystem::path& log_dir = "~/wcs_logs",
                   const std::string& log_file_name = "log");
 
   /// @brief 获取全局 logger 对象
