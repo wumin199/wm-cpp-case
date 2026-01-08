@@ -97,7 +97,7 @@ def set_level(new_level):
 
 def set_log_save_path(
         folder_path=os.path.join(os.path.expanduser("~"), "wcs_logs", "wcs_utils"),
-        max_bytes=1 * 1024 * 1024,
+        max_bytes=200 * 1024 * 1024,
         backup_count=3):
     """ set log save path with rotating file handler
 
