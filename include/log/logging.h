@@ -72,7 +72,7 @@ class SpdlogHelper {
  private:  // NOLINT
   std::shared_ptr<spdlog::logger> logger_;
   size_t max_log_files_ = 3;
-  size_t max_file_size_mb_ = 100;  // MB
+  size_t max_file_size_mb_ = 200;  // MB
 };
 
 /// @brief 全局 logger 实例声明（实现在 logging.cpp）
