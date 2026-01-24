@@ -123,17 +123,176 @@
 
 ```mermaid
 graph TD
-    Root[Repeat] --> MainSeq[Sequence: MainLogic]
-    MainSeq --> GetLoc[GetLoc]
-    MainSeq --> NavSelector[Selector: NavWithRecovery]
+    Root["Repeat (num_success=-1)"] --> MainSeq
     
-    NavSelector --> RecoverySeq[Sequence: RecoveryProcess]
-    RecoverySeq --> CheckError[Condition: IsWheelStuck?]
-    RecoverySeq --> WaitReset[Action: WaitManualReset]
+    %% MainLogic: 记忆型序列
+    MainSeq["Sequence (MainLogic) <br/><b>[Memory: TRUE]</b>"]
     
-    NavSelector --> LocSelector[Selector: LocSelector]
-    LocSelector --> AtLoc[AtLoc]
-    LocSelector --> GoToLoc[GoToLoc]
+    MainSeq --> GetLoc["Action: GetLoc"]
     
-    MainSeq --> Work[Parallel: WorkParallel]
+    %% NavLogic: 反应型选择器
+    MainSeq --> NavLogic["Selector (NavLogic) <br/><b>[Memory: FALSE]</b>"]
+    
+    %% 分支 1: 故障恢复
+    NavLogic --> RecoverySeq["Sequence (Recovery) <br/>[Memory: TRUE]"]
+    RecoverySeq --> CheckError["Condition: CheckWheelError"]
+    RecoverySeq --> WaitReset["Action: WaitManualReset <br/>(Failure on Success)"]
+    
+    %% 分支 2 & 3
+    NavLogic --> AtLoc["Condition: AtLoc"]
+    NavLogic --> GoToLoc["Action: GoToLoc"]
+    
+    %% 业务逻辑
+    MainSeq --> Work["Parallel (WorkParallel) <br/>[Policy: SuccessOnAll]"]
+    Work --> Apple["Action: FoundApple"]
+    Work --> Orange["Action: FoundOrange"]
+
+    style MainSeq fill:#f9f,stroke:#333,stroke-width:2px
+    style NavLogic fill:#bbf,stroke:#333,stroke-width:2px
+    style RecoverySeq fill:#fff,stroke-dasharray: 5 5
 ```
+
+逻辑解析：
+优先级拦截：因为 NavLogic 是一个 memory=False 的 Selector，它每一秒都从最左边的 Recovery 分支开始看。只要有错，右边的 AtLoc 和 GoToLoc 就完全没机会运行。
+
+“穿透”机制：
+
+当你输入 r 时，WaitManualReset 返回 FAILURE。
+
+这使得 Recovery 分支整体变黑（失败）。
+
+关键点：Selector 发现第一个孩子失败了，它不会退出，而是立即向右看。
+
+它会看到 AtLoc（还没到，失败），然后看到 GoToLoc（于是机器人继续移动）。
+
+这样更新后的流程图才真正体现了“修好轮子，必须继续走完剩下的路”这一严谨的机器人行为逻辑。
+
+
+你观察得非常准！这里的 `memory=True`（记忆型序列）是整棵树能够**“不忘初心”**、按部就班执行任务的**压轴支柱**。
+
+如果把这个 `True` 改成 `False`，你的机器人会陷入一种极其滑稽的“失忆”状态。
+
+---
+
+### 1. main_logic `memory=True` 在这里是必须的？
+
+在 `MainLogic` 中，我们的顺序是：
+`GetLoc` (获取地点)  `NavLogic` (导航/恢复)  `WorkParallel` (找水果)。
+
+* **有记忆 (`True`) 的行为**：
+当 `GetLoc` 成功后，Sequence 会**记住**它已经完成了。在接下来的每一个 Tick 中，Sequence 会**直接跳过** `GetLoc`，把所有的精力（Tick 信号）都发给 `NavLogic`。
+* **结果**：机器人会持续导航，直到到达目的地。
+
+
+* **无记忆 (`False`) 的行为**：
+每一秒，Sequence 都会从头开始。
+1. 第一秒：执行 `GetLoc`，成功拿到“地点A”。
+2. 第二秒：**又**执行 `GetLoc`！它会从队列里弹出“地点B”。
+3. 第三秒：**又**执行 `GetLoc`！弹出“地点C”。
+
+
+* **结果**：机器人根本没机会去导航，它会一秒钟换一个目标，瞬间把任务队列全部清空，然后报 FAILURE 退出。
+
+
+
+---
+
+### 2. 局部与全局的配合：记忆 vs 反应
+
+这个 V11.6 架构最精妙的地方在于**“全局有记忆，局部高反应”**的组合：
+
+| 节点层级                 | 属性               | 原因                                                                                                                               |
+| ------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **MainLogic (Sequence)** | **`memory=True`**  | **确保流程性**。必须先拿地点，再走路，走完了再干活。不能在走路的时候又跑去拿新地点。                                               |
+| **NavLogic (Selector)**  | **`memory=False`** | **确保警觉性**。每一秒都要先看有没有故障（Recovery）。如果有记忆，它修完一次轮子后就会“记住”恢复分支运行过了，下次再卡住它就瞎了。 |
+
+---
+
+### 3. 如果 `NavLogic` 运行中发生故障会怎样？
+
+正因为 `MainLogic` 有记忆，当 `NavLogic` 正在执行移动（返回 `RUNNING`）时，`MainLogic` 会一直“守”在导航这个环节。
+
+1. **故障发生**：`NavLogic` 内部因为轮子卡住，虽然还在运行，但逻辑切到了 `Recovery` 分支。
+2. **状态保持**：只要 `NavLogic` 没报 `SUCCESS` 或 `FAILURE`，`MainLogic` 就会在下一秒继续 Tick `NavLogic`。
+3. **断点续传**：这就是为什么机器人能在修好轮子后，继续从之前的 `move_time` 接着跑。因为 `MainLogic` 压根没打算重启整个流程。
+
+---
+
+### 4. 总结：True 的分量
+
+这里的 `memory=True` 相当于机器人的**“任务锚点”**。它保证了机器人：
+
+* **不回过头去**（不重复拿地点）。
+* **不跳过当前**（导航没完，不准找水果）。
+
+**一句话总结：`MainLogic` 用 `True` 来保证“正义”的顺序，而 `NavLogic` 用 `False` 来保证“生存”的直觉。**
+
+---
+
+**Would you like me to...**
+为你演示一下，如果我们将 `MainLogic` 设为 `memory=False` 并在 `GetLoc` 节点里加一点逻辑，如何让机器人变成一个“喜新厌旧”的怪物（一旦有新任务立刻丢掉手头正在去的目标）？这种模式在某些抢单配送机器人中反而很有用。
+
+
+### Recovery分支
+
+在 V11.6 的架构中，`Recovery`（故障恢复）分支的逻辑设计得非常巧妙，它利用了行为树的**“控制流”**来充当机器人的**“虚拟刹车”**。
+
+我们可以从以下三个关键点来深度拆解这部分的逻辑：
+
+---
+
+### 1. 它是如何“拦截”正常动作的？
+
+在 `NavLogic` 这个 **Selector** 中，`Recovery` 分支被放在了**最左侧（第一优先级）**。
+
+* **每一秒（每一个 Tick）**：行为树都会首先问 `CheckWheelError`：“现在轮子卡住了吗？”。
+* **如果没卡住**：`CheckWheelError` 返回 `FAILURE`。由于它是 `Sequence` 的第一个孩子，整个 `Recovery` 分支立即失效。Selector 就会跳过它，去执行右边的 `AtLoc` 或 `GoToLoc`。
+* **如果卡住了**：`CheckWheelError` 返回 `SUCCESS`。此时，`Sequence` 就会激活第二个孩子 —— `WaitManualReset`。
+
+---
+
+### 2. 它是如何实现“原地阻塞”的？
+
+当 `WaitManualReset` 运行时，它会进入 `RUNNING` 状态（因为它在等待你的键盘输入）。
+
+* 因为 `WaitManualReset` 是 `RUNNING`，所以父节点 `Recovery` 分支也是 `RUNNING`。
+* 根据 **Selector** 的特性：**只要左边的孩子正在运行，右边的孩子（导航动作）就永远不会被执行。**
+* **结果**：机器人的物理动作被“逻辑锁定”了。它不会再尝试移动，而是静静地坐在那里等你在控制台输入 `r`。
+
+---
+
+### 3. “修完继续走”的核心：为何返回 FAILURE？
+
+这是最反直觉的一点：在代码里，当你输入 `r`（重置成功）后，`WaitManualReset` 返回的是 **`FAILURE`** 而不是 `SUCCESS`。
+
+**为什么要“故意失败”？**
+
+* 如果返回 `SUCCESS`：`NavLogic`（Selector）会认为“既然第一个孩子成功了，我这一轮的任务就完成了”。于是它会直接报 `SUCCESS` 给外层的 `MainLogic`。这会导致机器人**跳过剩下的路，直接去执行找水果的任务**（这就是我们之前修掉的 Bug）。
+* 如果返回 `FAILURE`：
+1. `CheckWheelError` 在刚才已经清除了标志。
+2. `WaitManualReset` 报失败，导致整个 `Recovery` 分支报失败。
+3. **魔法发生了**：`NavLogic` 发现第一个孩子失败了，它会**立即**在同一个 Tick 内向右寻找。
+4. 它跳过 `Recovery`，尝试 `AtLoc`（还没到，失败），然后进入 `GoToLoc`。
+5. **结果**：你按下回车的一瞬间，机器人立刻恢复了移动，无缝衔接。
+
+
+
+---
+
+### 总结：Recovery 分支的职责链
+
+| 节点                | 状态      | 含义                                             |
+| ------------------- | --------- | ------------------------------------------------ |
+| **CheckWheelError** | `FAILURE` | 没故障，不用管我，去做导航。                     |
+| **CheckWheelError** | `SUCCESS` | 有故障！立刻抓住控制权，不准导航。               |
+| **WaitManualReset** | `RUNNING` | 故障中，阻塞整棵树，等待人类干预。               |
+| **WaitManualReset** | `FAILURE` | 故障修好了！我功成身退，把执行权交还给导航动作。 |
+
+---
+
+### 现在的逻辑状态
+
+这种设计在工业机器人中非常稳健。它将**“状态监控”**（CheckError）与**“动作执行”**（GoToLoc）解耦。即便你把故障恢复逻辑删掉，导航依然能跑；如果你加上它，它就变成了一个透明的“安全监视层”。
+
+**Would you like me to...**
+为你演示一下如何在这个 `Recovery` 分支里加入**“自动重试”**？比如：如果轮子卡住了，机器人先尝试自己往后退 5 厘米（不需要人工干预），如果退了三次还是卡住，再弹出键盘输入请求人工。
