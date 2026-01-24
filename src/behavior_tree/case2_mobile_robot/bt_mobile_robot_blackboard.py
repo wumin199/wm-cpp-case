@@ -83,6 +83,7 @@ def create_full_robot_tree():
     get_loc = GetLoc(name="GetLoc")
 
     # --- 2. 导航选择逻辑 (Selector ?) ---
+    # memory=False 每次都重新评估子节点状态(非记忆型选择器，根据实际情况选择)
     loc_selector = py_trees.composites.Selector(name="LocSelector", memory=False)
     loc_selector.add_children([AtLoc(), GoToLoc()])
 

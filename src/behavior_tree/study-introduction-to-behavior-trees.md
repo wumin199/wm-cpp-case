@@ -17,10 +17,10 @@
   
   并行节点可以同时获取几个 multiple actions and/or conditions，然后自己对这些状态进行or and运算
 
+3. 并行节点，也是按照顺序先后执行，并不是真正的多线程或多进程。实际指的是同一个tick中会按顺序都进行。parallel支持SuccessOnAll/SuccessOnOne/SuccessOnSelected。
 
 
-
-### 原地旋转，直到连续 5 次 tick 都检测到人为止
+## case1: 原地旋转，直到连续 5 次 tick 都检测到人为止
 
 我们要先理清一个核心概念：在行为树中，任何一个节点在被 Tick（执行）之后，必须返回且只能返回以下三种状态之一：
 
