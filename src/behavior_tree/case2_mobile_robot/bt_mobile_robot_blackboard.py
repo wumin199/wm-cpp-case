@@ -88,6 +88,11 @@ def create_full_robot_tree():
 
     # --- 3. 业务并行逻辑 (Parallel ⇉) ---
     # 按照图中所示，苹果和橙子是并行寻找的
+
+    # SuccessOnAll 对 FAILURE 敏感（遇到就崩）。
+    # SuccessOnOne 对 SUCCESS 敏感（遇到就成）。
+    # RUNNING 状态就是“维持现状”的信号，继续tick(执行update)
+
     work_parallel = py_trees.composites.Parallel(
         name="WorkParallel", policy=py_trees.common.ParallelPolicy.SuccessOnAll()
     )
