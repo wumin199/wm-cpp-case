@@ -90,7 +90,7 @@ class GoToLoc(py_trees.behaviour.Behaviour):
 
         self.move_time += 1
         if self.move_time >= move_limit:
-            print("  [动作] 到达目的地！")
+            print(f"  [动作] 到达目的地！: {self.move_time}/{move_limit}")
             self.blackboard.set("at_destination", True)
             self.move_time = 0
             return py_trees.common.Status.SUCCESS
