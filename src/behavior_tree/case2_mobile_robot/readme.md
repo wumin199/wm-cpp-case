@@ -492,5 +492,31 @@ def NavLogic_Tick():
 * **Selector 是 `||**`：寻找第一个可行的方案，作为“备选逻辑”或“优先级拦截”。
 * **Parallel 是 `Parallel IF**`：同时监控多个传感器的触发（比如：一边走路，一边避障，一边识别）。
 
-**你觉得这种“翻译”方式是不是让你对行为树的组装更有信心了？** **Would you like me to...**
-尝试用这种“伪代码逻辑”把你整棵树的执行过程重写一遍？这能帮你从程序员的角度进行最后的逻辑逻辑闭环审计。
+```mermaid
+graph TD
+    %% 方案 1: OR 逻辑 (Selector)
+    subgraph Plan_1 [方案 1: 或条件 Selector]
+        S1[Selector: Find_Either] --> A1[Action: Find_Apple]
+        S1 --> O1[Action: Find_Orange]
+        N1{{逻辑: Apple 或 Orange}} -.-> S1
+    end
+
+    %% 方案 2: AND 逻辑 (Parallel)
+    subgraph Plan_2 [方案 2: 与条件 Parallel]
+        P2[Parallel: Find_Both] --> A2[Action: Find_Apple]
+        P2 --> O2[Action: Find_Orange]
+        N2{{逻辑: Apple 与 Orange 同时}} -.-> P2
+    end
+
+    %% 方案 3: ORDER 逻辑 (Sequence)
+    subgraph Plan_3 [方案 3: 顺序条件 Sequence]
+        Q3[Sequence: Find_In_Order] --> A3[1. Action: Find_Apple]
+        Q3 --> O3[2. Action: Find_Orange]
+        N3{{逻辑: 先 Apple 后 Orange}} -.-> Q3
+    end
+
+    %% 样式
+    style S1 fill:#bbf,stroke:#333
+    style P2 fill:#d5e8d4,stroke:#82b366
+    style Q3 fill:#f9f,stroke:#333
+```

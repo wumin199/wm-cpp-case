@@ -4,18 +4,47 @@
 
 ## Note
 
+```mermaid
+graph TD
+    %% 方案 1: OR 逻辑 (Selector)
+    subgraph Plan_1 [方案 1: 或条件 Selector]
+        S1[Selector: Find_Either] --> A1[Action: Find_Apple]
+        S1 --> O1[Action: Find_Orange]
+        N1{{逻辑: Apple 或 Orange}} -.-> S1
+    end
+
+    %% 方案 2: AND 逻辑 (Parallel)
+    subgraph Plan_2 [方案 2: 与条件 Parallel]
+        P2[Parallel: Find_Both] --> A2[Action: Find_Apple]
+        P2 --> O2[Action: Find_Orange]
+        N2{{逻辑: Apple 与 Orange 同时}} -.-> P2
+    end
+
+    %% 方案 3: ORDER 逻辑 (Sequence)
+    subgraph Plan_3 [方案 3: 顺序条件 Sequence]
+        Q3[Sequence: Find_In_Order] --> A3[1. Action: Find_Apple]
+        Q3 --> O3[2. Action: Find_Orange]
+        N3{{逻辑: 先 Apple 后 Orange}} -.-> Q3
+    end
+
+    %% 样式
+    style S1 fill:#bbf,stroke:#333
+    style P2 fill:#d5e8d4,stroke:#82b366
+    style Q3 fill:#f9f,stroke:#333
+```
+
 1. FallBack：只要一个达到条件就行
 
-一般用于查询后执行：
-- One very common design principle you should know is defined in the book as **explicit success conditions**. In simpler terms, you should almost always check before you act. For example, if you’re already at a specific location, why not check if you’re already there before starting a navigation action?
-![](https://robohub.org/wp-content/uploads/2021/08/bt_mobile_robot_02.png)
-   (到达A或者没到A的话就GoToA)
+    一般用于查询后执行：
+    - One very common design principle you should know is defined in the book as **explicit success conditions**. In simpler terms, you should almost always check before you act. For example, if you’re already at a specific location, why not check if you’re already there before starting a navigation action?
+    ![](https://robohub.org/wp-content/uploads/2021/08/bt_mobile_robot_02.png)
+    (到达A或者没到A的话就GoToA)
 
-- We can also use Fallback nodes to define reactive behaviors; that is, if one behavior does not work, try the next one, and so on.
+    - We can also use Fallback nodes to define reactive behaviors; that is, if one behavior does not work, try the next one, and so on.
 
 2. Parallel nodes allows multiple actions and/or conditions to be considered within a single tick
-  
-  并行节点可以同时获取几个 multiple actions and/or conditions，然后自己对这些状态进行or and运算
+   
+   并行节点可以同时获取几个 multiple actions and/or conditions，然后自己对这些状态进行or and运算
 
 3. 并行节点，也是按照顺序先后执行，并不是真正的多线程或多进程。实际指的是同一个tick中会按顺序都进行。parallel支持SuccessOnAll/SuccessOnOne/SuccessOnSelected。
 
