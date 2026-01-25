@@ -94,6 +94,25 @@ class GoToLoc(py_trees.behaviour.Behaviour):
             return py_trees.common.Status.SUCCESS
 
         print(f"  [动作] 移动中: ({self.move_time}/{move_limit})")
+
+        # 这是一个非常精妙的工程设计问题。在 GoToLoc 报错时返回 RUNNING 而不是 FAILURE，
+        # 是为了**“保护”**整棵行为树不被这个临时错误搞崩溃，同时为下一秒的“抢占”留下空间。
+
+        # 如果这里返回了 FAILURE，根据行为树的逻辑，会产生以下连锁反应：
+
+        # 1. 为什么不能返回 FAILURE (失败)？
+        # 如果 GoToLoc 返回 FAILURE：
+
+        # 其父节点 LocSelector 会收到 FAILURE，由于它已经没有其他孩子可以尝试了，它也会报 FAILURE。
+
+        # 外层的 MainLogic (这是一个 Sequence) 收到 FAILURE 后会认为：“整个导航任务彻底搞砸了”。
+
+        # Sequence 会立即中断并向上传递 FAILURE，导致整棵树停止运行。
+
+        # 结果： 机器人还没来得及进入“恢复模式”，程序就直接退出了。这就好比车轮打滑了一下，司机不是去踩刹车尝试脱困，而是直接把车报废了。
+
+        # 在 py_trees 开发中，如果你希望一个动作在出故障后能被“抢占”并进入恢复流程，
+        # RUNNING 是你最好的朋友。它能让逻辑流停留在当前任务点，既不向后推进，也不向前溃退，直到环境状态（黑板变量）发生变化，将控制权交给优先级更高的分支。
         return py_trees.common.Status.RUNNING
 
 
@@ -172,7 +191,20 @@ if __name__ == "__main__":
         tree.tick_once()
         print(py_trees.display.unicode_tree(root=tree, show_status=True))
 
+        # 所以在我们的设计中，只能在GetLoc中返回failer,其他的selector和parallel只能返回running或success对吧
+
+        # 简单来说：是的，在“主干”流程上，我们要极力避免动作节点抛出 FAILURE，除非那是真的不可挽回的灾难
+
+        # 你的理解完全正确。在构建稳健的机器人行为时：
+
+        # 用 FAILURE 来控制流程的终点。
+
+        # 用 RUNNING 来处理过程中的波折。
+
+        # 用 SUCCESS 来推动阶段的交接。
+
         if tree.status == py_trees.common.Status.FAILURE:
+            # 这里只能由第一个Actions节点GetLoc返回FAILURE触发，表示任务执行结束
             print("\n[结果] 任务队列已完成。")
             break
 

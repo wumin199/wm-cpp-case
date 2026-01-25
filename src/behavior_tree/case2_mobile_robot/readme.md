@@ -152,8 +152,90 @@ graph TD
     style RecoverySeq fill:#fff,stroke-dasharray: 5 5
 ```
 
+
+```mermaid
+graph TD
+    %% 顶层控制
+    Root["Repeat (num_success=-1)"] -- "子 SUCCESS: 开启新循环<br/>子 FAILURE: 任务清空, 彻底停止" --> MainSeq
+
+    %% 主轴逻辑
+    MainSeq["Sequence (MainLogic) <br/><b>[Memory: TRUE]</b>"]
+    
+    MainSeq --> GetLoc["Action: GetLoc <br/>(SUCCESS: 拿到地点 / FAILURE: 任务空)"]
+    
+    MainSeq --> NavLogic["Selector (NavLogic) <br/><b>[Memory: FALSE]</b>"]
+    
+    MainSeq --> Work["Parallel (WorkParallel) <br/><b>[Policy: SuccessOnAll]</b>"]
+
+    %% 导航内部 - 优先级从左到右
+    NavLogic --> RecoverySeq["Sequence (Recovery) <br/>[Memory: TRUE]"]
+    RecoverySeq --> CheckError["Condition: CheckWheelError <br/>(SUCCESS: 发现卡住 / FAILURE: 正常)"]
+    RecoverySeq --> WaitReset["Action: WaitManualReset <br/>(RUNNING: 阻塞等待<br/><b>FAILURE: 敲'r'释放控制权</b>)"]
+
+    NavLogic --> AtLoc["Condition: AtLoc <br/><b>(SUCCESS: 坐标重合, 结束导航)</b>"]
+    
+    NavLogic --> GoToLoc["Action: GoToLoc <br/>(RUNNING: 移动中或卡住保命<br/><b>SUCCESS: 物理到达</b>)"]
+
+    %% 业务内部
+    Work --> Apple["Action: FoundApple <br/>(RUNNING: 识别中 / <b>SUCCESS: 完成</b>)"]
+    Work --> Orange["Action: FoundOrange <br/>(RUNNING: 识别中 / <b>SUCCESS: 完成</b>)"]
+
+    %% 样式美化
+    style MainSeq fill:#f9f,stroke:#333,stroke-width:2px
+    style NavLogic fill:#bbf,stroke:#333,stroke-width:2px
+    style Work fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+    style GetLoc fill:#fff2cc,stroke:#d6b656,stroke-width:2px
+    style RecoverySeq fill:#fff,stroke-dasharray: 5 5
+```
+
+```mermaid
+graph LR
+    Root["Repeat (num_success=-1)"] -- "子节点 SUCCESS: 开启新循环<br/>子节点 FAILURE: 任务清空, 彻底停止" --> MainSeq
+
+    subgraph MainLogic_Flow [主任务轴 - 逻辑顺序控制]
+        direction LR
+        MainSeq["Sequence (MainLogic) <br/><b>[Memory: TRUE]</b>"]
+        
+        %% 1. 获取任务
+        MainSeq -- "1. SUCCESS: 拿到地点<br/>FAILURE: 队列空" --> GetLoc["Action: GetLoc"]
+        
+        %% 2. 导航闸门
+        MainSeq -- "2. RUNNING: 处理中<br/><b>SUCCESS: 抵达终点</b>" --> NavLogic["Selector (NavLogic) <br/><b>[Memory: FALSE]</b>"]
+        
+        %% 3. 业务并行
+        MainSeq -- "3. RUNNING: 正在执行业务<br/><b>SUCCESS: 苹果橙子全搞定</b>" --> Work["Parallel (WorkParallel) <br/><b>[Policy: SuccessOnAll]</b>"]
+    end
+
+    subgraph Nav_Detail [导航内部逻辑 - 优先级控制]
+        direction TB
+        NavLogic -- "优先级1: 故障拦截" --> RecoverySeq["Sequence (Recovery) <br/>[Memory: TRUE]"]
+        RecoverySeq --> CheckError["Condition: CheckWheelError <br/>(SUCCESS: 发现卡住<br/>FAILURE: 正常无错)"]
+        RecoverySeq --> WaitReset["Action: WaitManualReset <br/>(RUNNING: 阻塞中<br/><b>FAILURE: 敲'r'让位给移动</b>)"]
+        
+        NavLogic -- "优先级2: 到达判断" --> AtLoc["Condition: AtLoc <br/><b>(SUCCESS: 坐标重合, 结束导航)</b>"]
+        
+        NavLogic -- "优先级3: 移动动作" --> GoToLoc["Action: GoToLoc <br/>(RUNNING: 位移中/卡住保命<br/><b>SUCCESS: 计数完成达标</b>)"]
+    end
+
+    subgraph Parallel_Detail [业务同步细节]
+        direction TB
+        Work -- "同步分发" --> Apple["Action: FoundApple <br/>(RUNNING: 找苹果...<br/><b>SUCCESS: 找到了</b>)"]
+        Work -- "同步分发" --> Orange["Action: FoundOrange <br/>(RUNNING: 找橙子...<br/><b>SUCCESS: 找到了</b>)"]
+    end
+
+    %% 样式美化
+    style MainSeq fill:#f9f,stroke:#333,stroke-width:2px
+    style NavLogic fill:#bbf,stroke:#333,stroke-width:2px
+    style Work fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+    style GetLoc fill:#fff2cc,stroke:#d6b656,stroke-width:2px
+    style RecoverySeq fill:#fff,stroke-dasharray: 5 5
+```
+
 逻辑解析：
-优先级拦截：因为 NavLogic 是一个 memory=False 的 Selector，它每一秒都从最左边的 Recovery 分支开始看。只要有错，右边的 AtLoc 和 GoToLoc 就完全没机会运行。
+
+MainLogic 用 memory=True：保证了任务的阶段性（拿地点 -> 导航 -> 找水果）。导航没做完（一直报 RUNNING），就不准回头拿新地点，也不准向后找水果。
+NavLogic 用 memory=False：保证了任务的安全性。即使导航动作（GoToLoc）正在报 RUNNING，每一秒也要强迫逻辑先去扫描左边的 Recovery 检查项。
+
 
 “穿透”机制：
 
