@@ -33,7 +33,9 @@ class CheckWheelError(py_trees.behaviour.Behaviour):
         # 只要黑板显示有错，就返回 SUCCESS 激活恢复逻辑
         if self.blackboard.get("wheel_error"):
             print("  [监控] !!! 警报：检测到故障 !!!")
+            # 整个 Sequence 继续执行恢复步骤，才能决定是 SUCCESS 还是 FAILURE 或 RUNNING
             return py_trees.common.Status.SUCCESS
+        # 正常，无报错，整个Sequecence返回 FAILURE
         return py_trees.common.Status.FAILURE
 
 
@@ -65,7 +67,7 @@ class AtLoc(py_trees.behaviour.Behaviour):
 
     def update(self):
         if self.blackboard.get("at_destination"):
-            print(f"  [判断] 已到达目的地，准备开始业务")
+            print("  [判断] 已到达目的地，准备开始业务")
             return py_trees.common.Status.SUCCESS
         return py_trees.common.Status.FAILURE
 
@@ -82,13 +84,13 @@ class GoToLoc(py_trees.behaviour.Behaviour):
 
         # 模拟随机故障
         if random.random() < error_chance:
-            print(f"  [动作] 糟糕！轮子卡住了！")
+            print("  [动作] 糟糕！轮子卡住了！")
             self.blackboard.set("wheel_error", True)
             return py_trees.common.Status.RUNNING
 
         self.move_time += 1
         if self.move_time >= move_limit:
-            print(f"  [动作] 到达目的地！")
+            print("  [动作] 到达目的地！")
             self.blackboard.set("at_destination", True)
             self.move_time = 0
             return py_trees.common.Status.SUCCESS
