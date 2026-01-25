@@ -15,4 +15,3 @@
 - [Github: TurtleBot Behavior Demos](https://github.com/sea-bass/turtlebot3_behavior_demos)
 - [Behavior Trees: Simple yet Powerful AI for your Robot](https://pirobot.org/blog/0030/)
 - [Towards a Unified Behavior Trees Framework for Robot Control](https://www.csc.kth.se/~almc/pdf/unified_bt_framework.pdf)
-
