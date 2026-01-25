@@ -47,6 +47,13 @@ graph TD
    并行节点可以同时获取几个 multiple actions and/or conditions，然后自己对这些状态进行or and运算
 
 3. 并行节点，也是按照顺序先后执行，并不是真正的多线程或多进程。实际指的是同一个tick中会按顺序都进行。parallel支持SuccessOnAll/SuccessOnOne/SuccessOnSelected。
+4. PyTrees：Some of the terminology and design paradigms are a little bit different from the Behavior Trees in Robotics book. For example, instead of Fallback nodes this library uses Selector nodes, and these behave slightly differently
+   1. 和ros2集成度很高：PyTrees for ROS
+5. BehaviorTree.CPP： This library is quickly gaining traction as the behavior tree library of the ROS developers’ ecosystem, because C++ is similarly the language of production quality development for robotics. In fact, the official ROS 2 navigation stack uses this library in its BT Navigator feature.
+   1. It is paired with a great tool named Groot which is not only a visualizer, but a graphical interface for editing behavior trees. The XML design principle basically means that you can draw a BT and export it as an XML file that plugs into your code.
+   2. This all works wonderfully if you know the structure of your BT beforehand, but leaves a little to be desired if you plan to modify your trees at runtime. 
+6. Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
+7. Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence.
 
 
 ## case1: 原地旋转，直到连续 5 次 tick 都检测到人为止
