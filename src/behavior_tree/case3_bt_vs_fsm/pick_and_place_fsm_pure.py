@@ -2,138 +2,136 @@ import time
 import random
 
 
-class PureRobotFSM:
-    # =========================================================================
-    # 保留你的核心笔记：
-    #
-    # 定义状态 (对应图中的长方形)
-    #
-    # 长方形 (MoveToObj, CloseGrip, MoveHome)：代表过程状态 (Intermediate States)。
-    # 机器人正处于“做某事”的过程中。
-    # 圆形 (SUCCESS, FAILURE)：代表终止状态 (Terminal States)。一旦进入这个状态，状态机就停止运行，任务结束。
-    #
-    # 长方形, 执行状态 (Action State), 列表中的普通字符串, 任务正在进行中
-    # 双线圆形, 终态 (Final/Exit State), 列表中的普通字符串, 任务彻底完成（成功或失败）
-    # 实心黑圆点, 初始态 (Initial State), initial='Idle', 程序的启动起点
-    #
-    # 在左图的行为树（BT）中，你会发现没有专门代表 SUCCESS 或 FAILURE 的长方形或圆圈。
-    #
-    # 这是因为 BT 的设计更模块化：
-    #
-    # SUCCESS 和 FAILURE 不是“一个地方”（状态），而是**“一个信号” (Status/Signal)**。
-    #
-    # 每个动作节点（如 MoveToObj）在运行完后，会向上汇报一个信号。
-    #
-    # 根节点的箭头（Sequence）根据这些信号决定是继续往右走，还是直接宣告全树失败。
-    #
-    # 这就是为什么说 BT 更容易组合和修改：你不需要像 FSM 那样画一根长长的线连到最后的圆圈上，
-    # 你只需要关注节点本身返回什么信号即可。
-    # =========================================================================
-
+class ManualRobotFSM:
     def __init__(self):
-        # 初始态 (Initial State): 实心黑圆点
+        # 初始状态 (实心黑圆点)
         self.state = "Idle"
 
-        # 定义转移映射 (State Transition Map)
-        # 模拟 transitions 库的 trigger 机制
-        self.transitions = {
-            "Idle": {"success": "MoveToObj"},
-            "MoveToObj": {"success": "CloseGrip"},
-            "CloseGrip": {"success": "MoveHome"},
-            "MoveHome": {"success": "Success"},
+        # 定义转换逻辑 (Transitions)
+        # 结构：{ "当前状态": { "触发器": "目标状态" } }
+        # 人形机器人这边，触发器都是step()
+        self._transitions = {
+            "Idle": {"start": "MoveToObj"},
+            "MoveToObj": {"success_step": "CloseGrip"},
+            "CloseGrip": {"success_step": "MoveHome"},
+            "MoveHome": {"success_step": "Success"},
         }
 
-    # --- 模拟 transitions 库的跳转触发器 ---
+    # --- 核心引擎逻辑 (模仿 transitions 库内部实现) ---
 
-    def trigger(self, event):
-        """裸写跳转引擎：根据当前状态和事件查找下一状态"""
-        print(f"\n[FSM Event] 触发事件: '{event}'")
+    def _execute_trigger(self, trigger_name):
+        """核心跳转引擎：负责 Before -> Exit -> Change -> Enter 生命周期"""
 
-        if event == "error":
-            self._transition_to("Failure")
+        # 0. 确定目标状态
+        # 特殊处理 error_occured，它允许从任意状态跳到 Failure
+        if trigger_name == "error_occured":
+            dest = "Failure"
+        else:
+            dest = self._transitions.get(self.state, {}).get(trigger_name)
+
+        if not dest:
             return
 
-        next_state = self.transitions.get(self.state, {}).get(event)
+        # 1. Step 2: Before (准入检查)
+        # 模拟 transitions 的 before 机制：查找 pre_check_xxx 方法
+        before_func = self._get_before_hook(trigger_name, dest)
+        if before_func:
+            before_func()
 
-        if next_state:
-            self._transition_to(next_state)
-        else:
-            print(f"⚠️ 警告: 状态 {self.state} 无法响应事件 {event}")
+        # 2. Step 3: On_Exit (源状态告别)
+        exit_func = getattr(self, f"on_exit_{self.state}", None)
+        if exit_func:
+            exit_func()
 
-    def _transition_to(self, next_state):
-        """核心跳转逻辑：包含 exit -> transition -> enter 的完整生命周期"""
+        # 3. Step 4: 状态变更 (State Change)
+        old_state = self.state
+        self.state = dest
+        # print(f"\n[ 系统 ] 状态变更: {old_state} -> {self.state}")
 
-        # 1. 执行旧状态的 EXIT 钩子
-        exit_hook = f"on_exit_{self.state}"
-        if hasattr(self, exit_hook):
-            getattr(self, exit_hook)()
+        # 4. Step 5: On_Enter (新状态欢迎/核心业务执行)
+        enter_func = getattr(self, f"on_enter_{self.state}", None)
+        if enter_func:
+            enter_func()
 
-        # 2. 执行跳转前的 BEFORE 钩子
-        before_hook = f"before_to_{next_state}"
-        if hasattr(self, before_hook):
-            getattr(self, before_hook)()
+    def _get_before_hook(self, trigger, dest):
+        """手动映射转换时的 before 钩子"""
+        if trigger == "start" and dest == "MoveToObj":
+            return self.pre_check_robot
+        if trigger == "success_step" and dest == "CloseGrip":
+            return self.pre_check_environment
+        return None
 
-        # 3. 更新状态
-        print(f"--- 状态转换: {self.state} >> {next_state} ---")
-        self.state = next_state
+    # --- 模拟触发器函数 ---
+    def start(self):
+        self._execute_trigger("start")
 
-        # 4. 执行新状态的 ENTER 钩子 (开始仿真动作)
-        enter_hook = f"on_enter_{self.state}"
-        if hasattr(self, enter_hook):
-            getattr(self, enter_hook)()
+    def success_step(self):
+        self._execute_trigger("success_step")
+
+    def error_occured(self):
+        self._execute_trigger("error_occured")
 
     # --- 生命周期钩子 (Lifecycle Hooks) ---
+    def pre_check_robot(self):
+        print("\n[ 阶段转换 ] >>> 准备前往 MoveToObj")
+        self._log(1, "🔍 [Before] 机器人自检...")
 
-    def before_to_MoveToObj(self):
-        print("[Hook - BEFORE] 正在检查机器人自检状态：电池、电机正常。")
-
-    def before_to_CloseGrip(self):
-        print("[Hook - BEFORE] 正在通过相机确认物体位置。")
+    def pre_check_environment(self):
+        print("\n[ 阶段转换 ] >>> 准备从 MoveToObj 切换到 CloseGrip")
+        self._log(1, "🔍 [Before] 环境预检...")
 
     def on_exit_MoveToObj(self):
-        print("[Hook - EXIT] 机器人已就位，切断底盘动力。")
-
-    # --- 动作执行 (ENTER 触发) ---
+        self._log(1, "🔌 [Exit] 离开 MoveToObj：切断底盘动力。")
 
     def on_enter_MoveToObj(self):
-        print("  [Action] 正在执行 MoveToObj：驱动底盘移动...")
-        time.sleep(0.8)
-        if random.random() < 0.3:  # 30% 失败率
-            raise RuntimeError("Navigation Error")
-        print("  [反馈] 已抵达物体。")
+        self.simulate_move_to_obj()
 
     def on_enter_CloseGrip(self):
-        print("  [Action] 正在执行 CloseGrip：闭合夹爪...")
-        time.sleep(0.8)
-        if random.random() < 0.3:
-            raise RuntimeError("Grip Error")
-        print("  [反馈] 已抓牢物体。")
+        self.simulate_close_grip()
 
     def on_enter_MoveHome(self):
-        print("  [Action] 正在执行 MoveHome：返回起始点...")
-        time.sleep(0.8)
-        print("  [反馈] 机器人已复位。")
+        self.simulate_move_home()
 
-    # --- 任务主循环 ---
+    # --- 业务仿真逻辑 ---
+    def _log(self, level, msg):
+        print(f"{'    ' * level}{msg}")
+
+    def simulate_move_to_obj(self):
+        self._log(2, "⚙️ [Enter] 进入 MoveToObj：正在移动...")
+        time.sleep(0.5)
+        if random.random() < 0.3:
+            self._log(3, "🚨 [报错] 路径被阻挡！")
+            raise RuntimeError("Navigation Blocked")
+        self._log(3, "✅ [反馈] 已抵达目标。")
+
+    def simulate_close_grip(self):
+        self._log(2, "⚙️ [Enter] 进入 CloseGrip：闭合夹爪...")
+        time.sleep(0.5)
+        if random.random() < 0.3:
+            self._log(3, "🚨 [报错] 抓取失败！")
+            raise RuntimeError("Grip Slip")
+        self._log(3, "✅ [反馈] 已抓牢。")
+
+    def simulate_move_home(self):
+        print("\n[ 阶段转换 ] >>> 准备前往 MoveHome")
+        self._log(2, "⚙️ [Enter] 进入 MoveHome：正在复位...")
+        time.sleep(0.5)
+        self._log(3, "✅ [反馈] 已复位。")
 
     def run_task(self):
         try:
             print(f">>> 任务启动！当前状态: {self.state}")
-
-            # 手动步进，模拟 success_step 触发
-            self.trigger("success")  # Idle -> MoveToObj
-            self.trigger("success")  # MoveToObj -> CloseGrip
-            self.trigger("success")  # CloseGrip -> MoveHome
-            self.trigger("success")  # MoveHome -> Success
-
-            print(f"\n任务结束，最终状态: {self.state} (SUCCESS 🏆)")
-
+            self.start()  # Idle -> MoveToObj
+            self.success_step()  # MoveToObj -> CloseGrip
+            self.success_step()  # CloseGrip -> MoveHome
+            self.success_step()  # MoveHome -> Success
+            print(f"\n🎉 任务成功！最终状态: {self.state}")
         except Exception as e:
-            print(f"\n！捕获异常: {e}")
-            self.trigger("error")  # 强制跳转到 Failure
-            print(f"任务中断，最终状态: {self.state} (FAILURE ❌)")
+            print(f"\n💥 运行时异常: {e}")
+            self.error_occured()
+            print(f"❌ 任务失败跳转至: {self.state} (已进入终止状态)")
 
 
 if __name__ == "__main__":
-    robot = PureRobotFSM()
+    robot = ManualRobotFSM()
     robot.run_task()
