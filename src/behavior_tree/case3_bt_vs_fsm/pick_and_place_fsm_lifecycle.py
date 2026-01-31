@@ -50,59 +50,87 @@ class RobotFSM:
         # 初始化状态机
         self.machine = Machine(model=self, states=RobotFSM.states, initial="Idle")
 
-        # 定义转换逻辑 (对应图中的箭头)
-        self.machine.add_transition(trigger="start", source="Idle", dest="MoveToObj")
+        # --- 1. 定义带有 before/after 钩子的转换逻辑 ---
+        # before: 在状态跳转动作开始“之前”执行（类似于预检）
+        # after: 在状态跳转彻底完成“之后”执行（类似于日志记录）
+
         self.machine.add_transition(
-            trigger="success_step", source="MoveToObj", dest="CloseGrip"
+            trigger="start", source="Idle", dest="MoveToObj", before="pre_check_robot"
         )
+
+        self.machine.add_transition(
+            trigger="success_step",
+            source="MoveToObj",
+            dest="CloseGrip",
+            before="pre_check_environment",
+        )
+
         self.machine.add_transition(
             trigger="success_step", source="CloseGrip", dest="MoveHome"
         )
+
         self.machine.add_transition(
             trigger="success_step", source="MoveHome", dest="Success"
         )
 
-        # 错误跳转逻辑：从任何状态 (*) 都可以跳向 Failure (对应图中所有向右转的 failure 线)
+        # 错误跳转逻辑
         self.machine.add_transition(trigger="error_occured", source="*", dest="Failure")
 
-        # 绑定仿真函数：当进入某个状态时，执行对应的 simulate 方法
+        # --- 2. 绑定 enter/exit 钩子 ---
+        # on_enter: 进入该状态的瞬间触发（通常用于启动仿真/实际动作）
+        # on_exit: 离开该状态的瞬间触发（通常用于清理现场/关闭电机）
+
+        # 移动到物体
         self.machine.on_enter_MoveToObj("simulate_move_to_obj")
+        self.machine.on_exit_MoveToObj("stop_chassis_motors")
+
+        # 闭合夹爪
         self.machine.on_enter_CloseGrip("simulate_close_grip")
+
+        # 返回原地
         self.machine.on_enter_MoveHome("simulate_move_home")
+
+    # --- 生命周期钩子函数 (Lifecycle Hooks) ---
+
+    def pre_check_robot(self):
+        print("\n[Hook - BEFORE] 正在检查机器人自检状态：电池、电机、传感器正常。")
+
+    def pre_check_environment(self):
+        print("\n[Hook - BEFORE] 正在通过相机确认物体位置未发生偏移。")
+
+    def stop_chassis_motors(self):
+        print("[Hook - EXIT] 机器人已就位，正在切断底盘动力以保持稳定。")
 
     # --- 仿真函数区域 ---
 
     def simulate_move_to_obj(self):
-        print("  [仿真] 正在规划路径并驱动底盘向物体移动...")
+        print("  [Action - ENTER] 正在执行 MoveToObj：驱动底盘向物体移动...")
         time.sleep(0.8)
-        if random.random() > 0.3:  # 70% 成功率
+        if random.random() > 0.3:
             print("  [反馈] 传感器显示：已抵达物体。")
         else:
-            print("  [报错] 路径受阻或电机超时！")
+            print("  [报错] 路径受阻！")
             raise RuntimeError("Navigation Error")
 
     def simulate_close_grip(self):
-        print("  [仿真] 驱动夹爪执行器：闭合...")
+        print("  [Action - ENTER] 正在执行 CloseGrip：驱动夹爪闭合...")
         time.sleep(0.8)
-        if random.random() > 0.3:  # 70% 成功率
+        if random.random() > 0.3:
             print("  [反馈] 压力传感器：已抓牢物体。")
         else:
-            print("  [报错] 抓取失败，物体滑落！")
+            print("  [报错] 物体掉落！")
             raise RuntimeError("Grip Error")
 
     def simulate_move_home(self):
-        print("  [仿真] 驱动底盘返回 Home 点...")
+        print("  [Action - ENTER] 正在执行 MoveHome：返回 Home 点...")
         time.sleep(0.8)
         print("  [反馈] 机器人已复位。")
 
     def run_task(self):
         try:
-            print(f">>> FSM 当前状态: {self.state}")
+            print(f">>> 任务启动！当前状态: {self.state}")
             self.start()  # Idle -> MoveToObj
 
-            # 驱动状态机向前步进
-            # 由于绑定了 on_enter 回调，每次跳转都会自动运行对应的仿真逻辑
-            # 执行自定义的trigger()来触发状态转换
             self.success_step()  # MoveToObj -> CloseGrip
             self.success_step()  # CloseGrip -> MoveHome
             self.success_step()  # MoveHome -> Success
@@ -111,8 +139,7 @@ class RobotFSM:
 
         except Exception as e:
             print(f"\n！捕获异常: {e}")
-            # 执行自定义的trigger()来触发状态转换到Failure
-            self.error_occured()  # 跳转到 Failure 状态
+            self.error_occured()
             print(f"任务中断，FSM 已跳转至最终状态: {self.state} (FAILURE ❌)")
 
 
