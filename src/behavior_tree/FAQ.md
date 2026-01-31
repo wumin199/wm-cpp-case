@@ -3,6 +3,7 @@
 状态机：适合事件驱动状态跃迁，如：
 - 任何状态下报错，就停止运动
 - 从A到B到C到D的过程中，底盘没电就去充电
+  Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence.
 - 游戏中，任何情况下发现玩家，就去追击玩家
 
 状态机结构：状态集合+转移条件(Q->∑->σ)
@@ -31,3 +32,8 @@
 ▶️节点类型：Selector（或逻辑）、Sequence（与逻辑）、Decorator（条件修饰）、Action（具体行为）
 ▶️工具支持：       插件：Behavior Designer（可视化编辑）、NodeCanvas       自定义：通过BehaviorNode基类派生节点
 ▶️性能瓶颈：高频Tick遍历可能消耗CPU，需优化（如降低非实时节点更新频率）
+
+
+> 状态少用状态机，状态多了行为树。实际应用可以结合，用状态机做大状态的切换，里面用行为树控制具体状态的行为逻辑
+
+> 状态少，行为简单，预期以后需求更改不频繁，就用状态机。状态多，行为复杂，需求多变，就用行为树。另外思想都是相通的，行为树本质上是一种可视化的编程脚本，用来实现复杂 AI 时也需要按状态机的思路来进行管理，不然就完全不具备可维护性
