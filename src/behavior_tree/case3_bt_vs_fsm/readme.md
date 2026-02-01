@@ -26,6 +26,10 @@
 - `pick_and_place_fsm_lifecycle_enhance.py`
 - `pick_and_place_fsm_pure_enhance.py`
 
+在看 bt版本
+
+- `pick_and_place_bt.py`
+- `pick_and_place_bt_enhance.py`
 
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
