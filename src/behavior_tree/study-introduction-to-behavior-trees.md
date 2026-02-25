@@ -33,7 +33,11 @@ graph TD
     style Q3 fill:#f9f,stroke:#333
 ```
 
-1. FallBack：只要一个达到条件就行
+1. execution node
+   
+   > Execution nodes, which are leaves of the BT, can either be Action or Condition nodes. The only difference is that condition nodes can only return Success or Failure within a single tick, whereas action nodes can span multiple ticks and can return Running until they reach a terminal state. Generally, condition nodes represent simple checks (e.g., “is the gripper open?”) while action nodes represent complex actions (e.g., “open the door”).
+
+2. FallBack：只要一个达到条件就行
 
     一般用于查询后执行：
     - One very common design principle you should know is defined in the book as **explicit success conditions**. In simpler terms, you should almost always check before you act. For example, if you’re already at a specific location, why not check if you’re already there before starting a navigation action?
@@ -42,18 +46,18 @@ graph TD
 
     - We can also use Fallback nodes to define reactive behaviors; that is, if one behavior does not work, try the next one, and so on.
 
-2. Parallel nodes allows multiple actions and/or conditions to be considered within a single tick
+3. Parallel nodes allows multiple actions and/or conditions to be considered within a single tick
    
    并行节点可以同时获取几个 multiple actions and/or conditions，然后自己对这些状态进行or and运算
 
-3. 并行节点，也是按照顺序先后执行，并不是真正的多线程或多进程。实际指的是同一个tick中会按顺序都进行。parallel支持SuccessOnAll/SuccessOnOne/SuccessOnSelected。
-4. PyTrees：Some of the terminology and design paradigms are a little bit different from the Behavior Trees in Robotics book. For example, instead of Fallback nodes this library uses Selector nodes, and these behave slightly differently
+4. 并行节点，也是按照顺序先后执行，并不是真正的多线程或多进程。实际指的是同一个tick中会按顺序都进行。parallel支持SuccessOnAll/SuccessOnOne/SuccessOnSelected。
+5. PyTrees：Some of the terminology and design paradigms are a little bit different from the Behavior Trees in Robotics book. For example, instead of Fallback nodes this library uses Selector nodes, and these behave slightly differently
    1. 和ros2集成度很高：PyTrees for ROS
-5. BehaviorTree.CPP： This library is quickly gaining traction as the behavior tree library of the ROS developers’ ecosystem, because C++ is similarly the language of production quality development for robotics. In fact, the official ROS 2 navigation stack uses this library in its BT Navigator feature.
+6. BehaviorTree.CPP： This library is quickly gaining traction as the behavior tree library of the ROS developers’ ecosystem, because C++ is similarly the language of production quality development for robotics. In fact, the official ROS 2 navigation stack uses this library in its BT Navigator feature.
    1. It is paired with a great tool named Groot which is not only a visualizer, but a graphical interface for editing behavior trees. The XML design principle basically means that you can draw a BT and export it as an XML file that plugs into your code.
    2. This all works wonderfully if you know the structure of your BT beforehand, but leaves a little to be desired if you plan to modify your trees at runtime. 
-6. Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
-7. Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence.
+7. Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
+8. Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence.
 
 
 ## case1: 原地旋转，直到连续 5 次 tick 都检测到人为止

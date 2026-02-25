@@ -48,12 +48,41 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 fsm版本：
 
 - `pick_and_place_fsm_v2.py`
+  基于 `pick_and_place_bt_enhance.py`
   需要新增状态，而且状态的triger和上下状态绑定，相当于也要修改上下状态。
   
   逻辑分叉：在 simulate_move_to_obj 的结尾，我们根据“传感器结果”触发了两个不同的 trigger：grasp_valid 或 grasp_invalid。这完美对应了你图中红色箭头的分支。新增状态 CorrectGrip：这是一个典型的 FSM 扩展方式。你会发现，每增加一个小需求，FSM 就需要多画一个框（状态）和多条线（转换）。
 
-- 
+- `pick_and_place_bt_v2.py`
+  基于`pick_and_place_bt_enhance.py`，只增加来个secector
 
+关于 reactivity
+
+> Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence. Implementing more reactivity would complicate the design of the BT, but is doable with constructs like Reactive Sequences.
+
+![](./battery_reactive_bt.png.png)
+
+> FSMs can allow this reactivity by allowing the definition of transitions between any two states.
+
+![](./battery_reactive_fsm.png)
+
+
+
+但其实bt也支持 `Reactive Sequence`
+
+> There have been specific constructs defined to make BTs more reactive for exactly these applications. For example, there is the notion of a “Reactive Sequence” that can still tick previous children in a sequence even after they have returned Success. In our example, this would allow us to terminate a subtree with Failure if the battery levels are low at any point during that action sequence, which may be what we want.
+
+
+使用fsm实现：
+
+- `battery_reactive_fsm.py`
+  这种“随时可能发生”的全局状态跳转，正是 FSM 比较繁琐的地方。在 Python 的 transitions 库中，我们可以利用 * 通配符来简化从任何状态跳转到充电状态的逻辑。
+  ![](./battery_reactive_fsm.png)
+- `battery_reactive_hfsm.py`
+  但其实fsm也可以进一步设计优化，不能全部否认。
+  ![](./battery_reactive_hfsm.png)
+
+  > On the note of “messy”, behavior tree zealots tend to make the argument of “spaghetti state machines” as reasons why you should never use FSMs. I believe that is not a fair comparison. The notion of a hierarchical finite-state machine (HFSM) has been around for a long time and helps avoid this issue if you follow good design practices, as you can see below. However, it is true that managing transitions in a HFSM is still more difficult than adding or removing subtrees in a BT.
 
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
