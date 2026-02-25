@@ -11,6 +11,7 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 
 - `pick_and_place_fsm_lifecycle.py`
   - 基于 `from transitions import Machine`
+  - 用try catch来处理transition的报错
 - `pick_and_place_fsm_pure.py`
   ```python
     # 定义转换逻辑 (Transitions)
@@ -26,25 +27,40 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
   - 手搓的fsm，用start(), success_step()来推动状态转移
   - 人形机器人统一用step()来当trigger,而且由于人形里面的状态是一直不停的，所以最外层是个step循环，放在来订阅的get_sytem_info()中
 - `pick_and_place_fsm_lifecycle_enhance.py`
+  使用 `self.machine.add_transition(trigger="error_occured", source="*", dest="Failure")`来处理每个transition的报错，而不是try catch。就是定义跳转到Failuer的trigger是error_occured()
 - `pick_and_place_fsm_pure_enhance.py`
+  - 也是定义transition跳转到失败的trigger
 
 在看 bt版本
 
 - `pick_and_place_bt.py`
 - `pick_and_place_bt_enhance.py`
+  Behaiver本身也支持`initialise`，`update`和`terminate`方法
 
 再来挑战下升级版：
 
-![](./pick_place_example_v2.png)
+![假设现在需要增加GraspValid判断和CorrectGrip动作](./pick_place_example_v2.png)
 
 这个案例可以体现 BT的一些优势
 
 > Now, what happens if we want to modify this behavior? Say we first want to check whether the pre-grasp position is valid, and correct if necessary before closing the gripper. With a BT, we can directly insert a subtree along our desired sequence of actions, whereas with a FSM we must rewire multiple transitions. This is what we mean when we claim BTs are great for modularity.
 
+fsm版本：
+
+- `pick_and_place_fsm_v2.py`
+  需要新增状态，而且状态的triger和上下状态绑定，相当于也要修改上下状态。
+  
+  逻辑分叉：在 simulate_move_to_obj 的结尾，我们根据“传感器结果”触发了两个不同的 trigger：grasp_valid 或 grasp_invalid。这完美对应了你图中红色箭头的分支。新增状态 CorrectGrip：这是一个典型的 FSM 扩展方式。你会发现，每增加一个小需求，FSM 就需要多画一个框（状态）和多条线（转换）。
+
+- 
+
 
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
-**pick_and_place_fsm_lifecycle.py**
+从 `pick_and_place_fsm_lifecycle.py`
+
+升级到 `pick_and_place_fsm_lifecycle_enhance.py`
+
 
 这是一个非常深刻的问题。你敏锐地察觉到了 **FSM（状态机）** 在处理“异常”与“任务流”时的结构性矛盾。
 
@@ -128,6 +144,10 @@ def simulate_move_to_obj(self):
 
 
 ## 仅就fsm来说，为啥 transitions 库的使用时，也不能很好的解决我说的用了try catch来强行跳转逻辑的处理么
+
+从 `pick_and_place_fsm_lifecycle.py`
+
+升级到 `pick_and_place_fsm_lifecycle_enhance.py`
 
 
 如何理解：在工业级状态机中，我们通常采用**“事件回调 + 状态反馈”**的模式。。

@@ -156,6 +156,7 @@ def create_full_robot_tree():
 
     # 核心选择器：优先级 恢复 > 判定 > 动作
     # memory=False 非常重要，确保每一秒都在重新评估优先级
+    # 因为最外层套着一个 Repeat，所以每一秒都会重新评估这个 Selector 的孩子状态，确保一旦恢复分支完成了它的任务（用户输入 'r'），就能立刻切换回导航动作。
     nav_logic = py_trees.composites.Selector(name="NavLogic", memory=False)
     nav_logic.add_children([recovery_process, at_loc, go_to_loc])
 

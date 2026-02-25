@@ -233,6 +233,8 @@ graph LR
 
 逻辑解析：
 
+因为最外层套着repeated
+
 MainLogic 用 memory=True：保证了任务的阶段性（拿地点 -> 导航 -> 找水果）。导航没做完（一直报 RUNNING），就不准回头拿新地点，也不准向后找水果。
 NavLogic 用 memory=False：保证了任务的安全性。即使导航动作（GoToLoc）正在报 RUNNING，每一秒也要强迫逻辑先去扫描左边的 Recovery 检查项。
 
