@@ -1,6 +1,8 @@
 
 ## 阅读路线
 
+ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction-to-behavior-trees/)
+
 先学习简单的案例：
 
 ![](./pick_place_example.png)

@@ -1,4 +1,5 @@
 
+> Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
 
 状态机：适合事件驱动状态跃迁，如：
 - 任何状态下报错，就停止运动
@@ -39,3 +40,8 @@
 > 状态少，行为简单，预期以后需求更改不频繁，就用状态机。状态多，行为复杂，需求多变，就用行为树。另外思想都是相通的，行为树本质上是一种可视化的编程脚本，用来实现复杂 AI 时也需要按状态机的思路来进行管理，不然就完全不具备可维护性
 
 
+## 一些案例
+
+1. 人形：手动/自主作业/遥操作/推理模式之间，用到fSM,有hey,run,bye,配合step()
+2. 这里提到作为planning和exectuion之间的中间层：`It wasn’t long until I was working with them in my project as a layer between planning and execution, which I describe in my 2020 recap blog post.`
+(ref: [2020 in Review: Home Service Robotics at MIT CSAIL](https://roboticseabass.com/2020/12/30/2020-review-service-robotics-mit-csail/))
