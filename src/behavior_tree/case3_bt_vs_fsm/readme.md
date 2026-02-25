@@ -104,6 +104,8 @@ fsm版本：
     style BatCheck fill:#f8cecc,stroke:#b85450
   ```
 
+  BatteryCheck 必须返回 SUCCESS（代表电量低）,然后才会执行 GoCharge 动作
+
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
 从 `pick_and_place_fsm_lifecycle.py`
