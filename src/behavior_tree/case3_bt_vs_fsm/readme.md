@@ -83,6 +83,26 @@ fsm版本：
   ![](./battery_reactive_hfsm.png)
 
   > On the note of “messy”, behavior tree zealots tend to make the argument of “spaghetti state machines” as reasons why you should never use FSMs. I believe that is not a fair comparison. The notion of a hierarchical finite-state machine (HFSM) has been around for a long time and helps avoid this issue if you follow good design practices, as you can see below. However, it is true that managing transitions in a HFSM is still more difficult than adding or removing subtrees in a BT.
+- `battery_reactive_bt.py`
+  ```mermaid
+  graph TD
+    Root["Root Selector (?)"] --> ChargeBranch["Charge Logic (Sequence →)"]
+    Root --> NominalBranch["Nominal Task (Sequence →)"]
+    
+    %% 充电分支
+    ChargeBranch --> BatCheck["BatteryLow? (Condition)"]
+    ChargeBranch --> GoCharge["GoCharge (Action)"]
+    
+    %% 常规任务分支
+    NominalBranch --> MoveToObj["MoveToObj (Action)"]
+    NominalBranch --> CloseGrip["CloseGrip (Action)"]
+    NominalBranch --> MoveHome["MoveHome (Action)"]
+    
+    style Root fill:#f9f,stroke:#333,stroke-width:2px
+    style ChargeBranch fill:#fff2cc,stroke:#d6b656
+    style NominalBranch fill:#dae8fc,stroke:#6c8ebf
+    style BatCheck fill:#f8cecc,stroke:#b85450
+  ```
 
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
