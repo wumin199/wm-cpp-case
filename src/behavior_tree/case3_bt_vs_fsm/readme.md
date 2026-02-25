@@ -33,6 +33,15 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 - `pick_and_place_bt.py`
 - `pick_and_place_bt_enhance.py`
 
+再来挑战下升级版：
+
+![](./pick_place_example_v2.png)
+
+这个案例可以体现 BT的一些优势
+
+> Now, what happens if we want to modify this behavior? Say we first want to check whether the pre-grasp position is valid, and correct if necessary before closing the gripper. With a BT, we can directly insert a subtree along our desired sequence of actions, whereas with a FSM we must rewire multiple transitions. This is what we mean when we claim BTs are great for modularity.
+
+
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
 **pick_and_place_fsm_lifecycle.py**
