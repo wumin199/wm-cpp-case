@@ -11,7 +11,22 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 
 - `pick_and_place_fsm_lifecycle.py`
   - 基于 `from transitions import Machine`
-  - 用try catch来处理transition的报错
+  - 用try catch来处理transition到failure
+    ```python
+        def run_task(self):
+        try:
+            print(f">>> 任务启动！当前状态: {self.state}")
+            self.start()
+            self.success_step()
+            self.success_step()
+            self.success_step()
+            print(f"\n🎉 任务成功！最终状态: {self.state}")
+        except Exception as e:
+            # 当底层动作触发 raise 时，这里捕获异常并执行 FSM 的错误跳转
+            print(f"\n💥 运行时异常: {e}")
+            self.error_occured()
+            print(f"❌ 任务失败跳转至: {self.state} (已进入终止状态)")
+    ```
 - `pick_and_place_fsm_pure.py`
   ```python
     # 定义转换逻辑 (Transitions)
@@ -24,7 +39,7 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
         "MoveHome": {"success_step": "Success"},
     }
   ```
-  - 手搓的fsm，用start(), success_step()来推动状态转移
+  - 手搓的fsm，用start(), success_step()来推动状态转移。跳转到failure也是用try catch
   - 人形机器人统一用step()来当trigger,而且由于人形里面的状态是一直不停的，所以最外层是个step循环，放在来订阅的get_sytem_info()中
 - `pick_and_place_fsm_lifecycle_enhance.py`
   使用 `self.machine.add_transition(trigger="error_occured", source="*", dest="Failure")`来处理每个transition的报错，而不是try catch。就是定义跳转到Failuer的trigger是error_occured()
@@ -36,10 +51,13 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 - `pick_and_place_bt.py`
 - `pick_and_place_bt_enhance.py`
   Behaiver本身也支持`initialise`，`update`和`terminate`方法
+  每个behaiver执行失败就可以直接跳出整个BT
 
 再来挑战下升级版：
 
 ![假设现在需要增加GraspValid判断和CorrectGrip动作](./pick_place_example_v2.png)
+
+注意这里的GraspValid是椭圆形的，是
 
 这个案例可以体现 BT的一些优势
 

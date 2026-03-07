@@ -33,6 +33,8 @@ graph TD
     style Q3 fill:#f9f,stroke:#333
 ```
 
+![](./pics/node_types.png)
+
 1. execution node
    
    > Execution nodes, which are leaves of the BT, can either be Action or Condition nodes. The only difference is that condition nodes can only return Success or Failure within a single tick, whereas action nodes can span multiple ticks and can return Running until they reach a terminal state. Generally, condition nodes represent simple checks (e.g., “is the gripper open?”) while action nodes represent complex actions (e.g., “open the door”).
