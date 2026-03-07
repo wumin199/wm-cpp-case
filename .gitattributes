@@ -2,5 +2,45 @@
 * text eol=lf
 
 # Do not modify line endings for binary files
-*.STL binary
-*.stl binary
+
+*.[sS][tT][lL] binary
+*.[sS][tT][eE][pP] binary
+
+*.[jJ][pP][gG] binary
+*.[pP][nN][gG] binary
+*.[gG][iI][fF] binary
+*.[bB][mM][pP] binary
+
+*.[pP][dD][fF] binary
+*.[dD][oO][cC] binary
+*.[dD][oO][cC][xX] binary
+*.[xX][lL][sS] binary
+*.[xX][lL][sS][xX] binary
+*.[pP][pP][tT] binary
+*.[pP][pP][tT][xX] binary
+
+*.[dD][mM][gG] binary
+*.[mM][pP][3] binary
+*.[mM][pP][4] binary
+*.[aA][vV][iI] binary
+*.[mM][oO][vV] binary
+*.[mM][kK][vV] binary
+*.[wW][mM][vV] binary
+*.[fF][lL][vV] binary
+*.[sS][wW][fF] binary
+
+*.[eE][xX][eE] binary
+*.[dD][lL][lL] binary
+*.[zZ][iI][pP] binary
+*.[tT][aA][rR] binary
+*.[gG][zZ] binary
+*.[rR][aA][rR] binary
+*.[7z] binary
+*.[iI][sS][oO] binary
+*.plantuml binary
+*.excalidraw binary
+*.drawio binary
+
+# Make sure windows batch files preserve CRLF ending
+*.bat text eol=crlf
+*.cmd text eol=crlf

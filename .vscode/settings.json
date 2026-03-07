@@ -33,5 +33,7 @@
         // "CMAKE_PREFIX_PATH": "${workspaceFolder}/Debug/xyz", // 指定查找包的额外路径，暂时没用到
         "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/Debug/wumin199",
         "CMAKE_BUILD_TYPE": "Debug", // 在这里定义编译类型, Release/Debug/RelWithDebInfo/MinSizeRel
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

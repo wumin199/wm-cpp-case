@@ -1,0 +1,64 @@
+
+> Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
+
+状态机：适合事件驱动状态跃迁，如：
+- 任何状态下报错，就停止运动
+- 从A到B到C到D的过程中，底盘没电就去充电
+  Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence.
+- 游戏中，任何情况下发现玩家，就去追击玩家
+
+状态机结构：状态集合+转移条件(Q->∑->σ)
+状态机执行逻辑：线性跳转，当前状态唯一
+状态机复杂度：容易状态转移爆炸（随着状态数量上升，转移条件指数级别曾长Nx(N-1)
+  
+行为树：条件驱动节点执行（树状分层决策），如：
+- 先做A，再同时做BC
+- 需要A和B,再做C,然后某些情况下做D,某些情况下做E
+- 简单说是需要一大堆if/else/until/repeated/while等构成的类似树状的固定的逻辑
+
+行为树结构：节点组合：控制节点/装饰节点/任务节点
+行为树复杂度：节点服用性质强，子树模块化，适合复杂逻辑，容易扩展
+行为树执行逻辑：自顶向下遍历，节点返回Success/Failure/Running
+
+
+
+✅状态机实现
+	
+▶️常用方法：枚举+switch-case、状态类（IState接口+OnEnter/Update/Exit）。人形的hey,run,bye。有个step()一直在循环。
+▶️优化点：避免频繁状态切换；使用字典注册状态减少GC
+▶️性能：执行效率高（直接跳转），内存占用低
+	
+✅行为树实现
+	
+▶️节点类型：Selector（或逻辑）、Sequence（与逻辑）、Decorator（条件修饰）、Action（具体行为）
+▶️工具支持：       插件：Behavior Designer（可视化编辑）、NodeCanvas       自定义：通过BehaviorNode基类派生节点
+▶️性能瓶颈：高频Tick遍历可能消耗CPU，需优化（如降低非实时节点更新频率）
+
+
+> 状态少用状态机，状态多了行为树。实际应用可以结合，用状态机做大状态的切换，里面用行为树控制具体状态的行为逻辑
+
+> 状态少，行为简单，预期以后需求更改不频繁，就用状态机。状态多，行为复杂，需求多变，就用行为树。另外思想都是相通的，行为树本质上是一种可视化的编程脚本，用来实现复杂 AI 时也需要按状态机的思路来进行管理，不然就完全不具备可维护性
+
+个人总结：
+
+1. 这2个应该完全可以互相转换，只是会有个复杂度和理解性的区别。不管是模块化还是相应性，两者都有各自的方案。模块化：传统上是bt优一些，响应性是fsm优越一些。但是fsm可以用hfsm来弥补，响应性的话，通过一些设计，如selector配合sequence等也能组合出来（只是相当于你要有一些经验，需要设计下）。如果fsm很简单，只有几个状态，可以直接if,else,不用库。
+
+## 总结
+
+参考 `battery_reactive_bt.py`
+
+关键点：有running状态。因为robot action里面有running，所以有机会一直在tick中检查battery的状态，是这样子的么。在 FSM 中，当机器人处于某个状态时，它通常被“困”在那个函数里执行。但在行为树中，因为有了 RUNNING 状态，逻辑的控制权发生了微妙的流转。这个和plc的stl很像，没有sleep/delay函数，不会阻塞在任何地方，而是会一直循环。
+
+
+参考`hybrid.py`
+
+**FSM 库通常是“事件驱动型（Event-driven）”**：你调用 `machine.trigger_event()`，状态瞬间跳转，然后等待下一个事件。
+**行为树是“轮询驱动型（Polling-driven）”**：它需要不断地 Tick。
+
+在混合架构中，我们实际上是把 FSM 当作一个**“顶层调度器”**。手动 `while` 循环更像 PLC 的扫描周期（Scan Cycle），这能更直观地展示：在每一个毫秒，系统都在**“先看电量（FSM），再干活（BT）”**。
+
+## 一些案例
+
+1. 人形：手动/自主作业/遥操作/推理模式之间，用到fSM,有hey,run,bye,配合step()
+2. 这里提到作为planning和exectuion之间的中间层：`It wasn’t long until I was working with them in my project as a layer between planning and execution, which I describe in my 2020 recap blog post.`
+(ref: [2020 in Review: Home Service Robotics at MIT CSAIL](https://roboticseabass.com/2020/12/30/2020-review-service-robotics-mit-csail/))
