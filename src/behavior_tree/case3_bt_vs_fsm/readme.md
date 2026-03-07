@@ -57,7 +57,7 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 
 ![假设现在需要增加GraspValid判断和CorrectGrip动作](./pick_place_example_v2.png)
 
-注意这里的GraspValid是椭圆形的，是
+注意这里的GraspValid是椭圆形的，表示condition node。但是在fsm中，condition node相当于是trigger,不是个state.
 
 这个案例可以体现 BT的一些优势
 
@@ -66,7 +66,7 @@ ref: [Behavior trees vs. finite-state machines](https://robohub.org/introduction
 fsm版本：
 
 - `pick_and_place_fsm_v2.py`
-  基于 `pick_and_place_bt_enhance.py`
+  基于 `pick_and_place_fsm_lifecycle_enhance.py`
   需要新增状态，而且状态的triger和上下状态绑定，相当于也要修改上下状态。
   
   逻辑分叉：在 simulate_move_to_obj 的结尾，我们根据“传感器结果”触发了两个不同的 trigger：grasp_valid 或 grasp_invalid。这完美对应了你图中红色箭头的分支。新增状态 CorrectGrip：这是一个典型的 FSM 扩展方式。你会发现，每增加一个小需求，FSM 就需要多画一个框（状态）和多条线（转换）。
@@ -78,7 +78,7 @@ fsm版本：
 
 > Adding a battery check and charging action to a BT is easy, but note that this check is not reactive — it only occurs at the start of the sequence. Implementing more reactivity would complicate the design of the BT, but is doable with constructs like Reactive Sequences.
 
-![](./battery_reactive_bt.png.png)
+![](./battery_reactive_bt.png)
 
 > FSMs can allow this reactivity by allowing the definition of transitions between any two states.
 
@@ -123,6 +123,27 @@ fsm版本：
   ```
 
   BatteryCheck 必须返回 SUCCESS（代表电量低）,然后才会执行 GoCharge 动作
+
+- `hybrid.py`
+  ![](./hybrid.png)
+  
+
+  > **作者的观点**核心在于 “分治管理”：
+  > 
+  > FSM 处理“大状态” (Operational Modes)：
+  > - FSM 的强项是逻辑跳转非常明确（例如：从“工作”到“充电”的单向跳转）。
+  > - 在顶层使用 FSM，可以让开发者一眼看出机器人当前是在“干活”还是在“保命（充电）”。
+  > - 弱点：如果在 FSM 里写细碎的动作（如：抓取失败了怎么办），会导致跳转线爆炸。
+  > 
+  > BT 处理“细行为” (Behavioral Sequences)：
+  > - BT 的强项是模块化和错误恢复。图右侧的绿框展示了：如果 GraspValid 失败了，它可以立刻尝试 CorrectGrip。
+  > - 在局部使用 BT，可以把“搬运”这件事做得非常鲁棒，而不需要顶层 FSM 关心抓取的细节。
+  > - 弱点：如果整个大系统都用 BT，有时很难直观地控制全局的“强制跳转”。
+  > 
+  > 结论： 顶层用 FSM 切换大模式（状态），底层用 BT 实现每个模式的具体行为。
+
+
+  这里的fsm没有用库，因为状态简单直接用if else。如果状态复杂，可以用fsm库或者全部bt化。
 
 ## 不管是用库，还是手搓来一个fsm,好像都有try except.这种用法来做状态转移，你觉得是常见做法，还是其实不是最佳实践。
 
