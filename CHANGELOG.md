@@ -8,3 +8,4 @@
 5. #12 python 版本的spdlog
 6. #14 修改python日志默认大小
 7. #16 use wcs naming
+8. #3 behavior trees: Introduction to behavior trees
