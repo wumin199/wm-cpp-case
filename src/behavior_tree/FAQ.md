@@ -1,4 +1,6 @@
 
+## BT vs FSM
+
 > Specific to BTs vs. FSMs, there is a tradeoff between modularity and reactivity. Generally, BTs are easier to compose and modify while FSMs have their strength in designing reactive behaviors.
 
 状态机：适合事件驱动状态跃迁，如：
@@ -62,3 +64,8 @@
 1. 人形：手动/自主作业/遥操作/推理模式之间，用到fSM,有hey,run,bye,配合step()
 2. 这里提到作为planning和exectuion之间的中间层：`It wasn’t long until I was working with them in my project as a layer between planning and execution, which I describe in my 2020 recap blog post.`
 (ref: [2020 in Review: Home Service Robotics at MIT CSAIL](https://roboticseabass.com/2020/12/30/2020-review-service-robotics-mit-csail/))
+
+
+## sml
+
+- eUML DSL (src_state + event [ guard ] / action -> dst_state)
